@@ -1,5 +1,6 @@
 package com.bedrockux.mixin;
 
+import net.minecraft.client.model.Model;
 import net.minecraft.client.gui.components.PlayerSkinWidget;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -16,4 +17,10 @@ public interface PlayerSkinWidgetAccessor {
 
 	@Accessor("rotationY")
 	void bedrockux$setRotationY(float rotationY);
+
+	@Accessor("wideModel")
+	Model.Simple bedrockux$getWideModel();
+
+	@Accessor("slimModel")
+	Model.Simple bedrockux$getSlimModel();
 }

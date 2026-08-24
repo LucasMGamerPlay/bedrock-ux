@@ -2,10 +2,18 @@ package com.bedrockux.mixin;
 
 import com.bedrockux.BedrockUX;
 import com.bedrockux.config.BedrockUXConfig;
+import com.bedrockux.ui.ShaderCompat;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.PlayerSkinWidget;
 import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.PlayerSkin;
+
+import java.util.function.Supplier;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -68,8 +76,37 @@ public abstract class TitleScreenMixin extends Screen {
 	private static final float FOLLOW_YAW_LIMIT = 40.0F;
 	private static final float FOLLOW_PITCH_LIMIT = 25.0F;
 
+	/** Regiao do rosto na textura de skin, e a camada de chapeu por cima. */
+	@Unique
+	private static final int FACE_U = 8;
+
+	@Unique
+	private static final int FACE_V = 8;
+
+	@Unique
+	private static final int HAT_U = 40;
+
+	@Unique
+	private static final int FACE_SIZE = 8;
+
+	@Unique
+	private static final int SKIN_TEXTURE_SIZE = 64;
+
 	@Unique
 	private PlayerSkinWidget bedrockux$playerModel;
+
+	/** Preenchido so quando o modelo 3D e trocado pelo rosto em 2D. */
+	@Unique
+	private Supplier<PlayerSkin> bedrockux$faceSkin;
+
+	@Unique
+	private int bedrockux$faceX;
+
+	@Unique
+	private int bedrockux$faceY;
+
+	@Unique
+	private int bedrockux$faceSize;
 
 	private TitleScreenMixin(Component title) {
 		super(title);
@@ -170,6 +207,13 @@ public abstract class TitleScreenMixin extends Screen {
 			return;
 		}
 
+		// Com shader pack ligado o modelo 3D sai deformado aqui — ver ShaderCompat. O rosto em
+		// 2D e um blit comum de GUI, caminho que o shader nao toca, entao sobrevive.
+		if (config.hideModelWithShaders && ShaderCompat.isShaderPackActive()) {
+			bedrockux$useFaceFallback(config);
+			return;
+		}
+
 		int centerX = Math.round(this.width * config.modelCenterFraction);
 		int nameHeight = config.showPlayerName ? this.minecraft.font.lineHeight + NAME_GAP : 0;
 		int areaTop = Math.round(this.height * 0.30F);
@@ -247,11 +291,51 @@ public abstract class TitleScreenMixin extends Screen {
 	 * mouse, entao o giro acontece sozinho.
 	 */
 	@Inject(method = "extractRenderState", at = @At("HEAD"))
-	private void bedrockux$followMouse(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick,
+	private void bedrockux$updatePlayerModel(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick,
 			CallbackInfo callbackInfo) {
 		PlayerSkinWidget model = this.bedrockux$playerModel;
 
-		if (model == null || !BedrockUX.config().titleScreen.modelFollowsMouse) {
+		if (model == null) {
+			return;
+		}
+
+		PlayerSkinWidgetAccessor accessor = (PlayerSkinWidgetAccessor) model;
+		bedrockux$resetModelPose(accessor);
+
+		if (BedrockUX.config().titleScreen.modelFollowsMouse) {
+			bedrockux$applyMouseRotation(accessor, model, mouseX, mouseY);
+		}
+	}
+
+	/**
+	 * Devolve as partes do modelo a pose original antes de cada frame.
+	 *
+	 * <p>{@code Model.Simple} nao anima nada — o {@code setupAnim} dele e vazio —, entao as
+	 * partes ficam com a ultima transformacao que alguem tiver deixado nelas. Num jogo com
+	 * mods que substituem modelos de entidade, isso aparece como um boneco torto na tela
+	 * inicial que se conserta sozinho depois de entrar num mundo, porque aí o vanilla anima
+	 * as partes e as deixa em valores sensatos.
+	 */
+	private static void bedrockux$resetModelPose(PlayerSkinWidgetAccessor accessor) {
+		bedrockux$resetParts(accessor.bedrockux$getWideModel());
+		bedrockux$resetParts(accessor.bedrockux$getSlimModel());
+	}
+
+	private static void bedrockux$resetParts(Model.Simple model) {
+		if (model == null) {
+			return;
+		}
+
+		for (ModelPart part : model.root().getAllParts()) {
+			part.resetPose();
+		}
+	}
+
+	private void bedrockux$applyMouseRotation(PlayerSkinWidgetAccessor accessor, PlayerSkinWidget model,
+			int mouseX, int mouseY) {
+		// Antes de init, ou durante um redimensionamento, a tela pode ter dimensao zero: a
+		// divisao viraria NaN e o quaternion levaria o modelo a geometria invalida.
+		if (this.width <= 0 || this.height <= 0) {
 			return;
 		}
 
@@ -262,8 +346,63 @@ public abstract class TitleScreenMixin extends Screen {
 		float yaw = (mouseX - centerX) / (this.width / 2.0F) * FOLLOW_YAW_LIMIT;
 		float pitch = (mouseY - centerY) / (this.height / 2.0F) * FOLLOW_PITCH_LIMIT;
 
-		PlayerSkinWidgetAccessor accessor = (PlayerSkinWidgetAccessor) model;
+		if (!Float.isFinite(yaw) || !Float.isFinite(pitch)) {
+			return;
+		}
+
 		accessor.bedrockux$setRotationY(Mth.clamp(yaw, -FOLLOW_YAW_LIMIT, FOLLOW_YAW_LIMIT));
 		accessor.bedrockux$setRotationX(Mth.clamp(-pitch, -FOLLOW_PITCH_LIMIT, FOLLOW_PITCH_LIMIT));
+	}
+
+	/** Prepara o rosto em 2D no lugar do modelo, mantendo o nome acima dele. */
+	private void bedrockux$useFaceFallback(BedrockUXConfig.TitleScreen config) {
+		int size = Math.min(Math.round(this.height * config.modelHeightFraction), config.maxModelHeight) / 2;
+
+		if (size < FACE_SIZE) {
+			return;
+		}
+
+		int centerX = Math.round(this.width * config.modelCenterFraction);
+		int nameHeight = config.showPlayerName ? this.minecraft.font.lineHeight + NAME_GAP : 0;
+
+		this.bedrockux$faceSize = size;
+		this.bedrockux$faceX = centerX - size / 2;
+		this.bedrockux$faceY = (this.height - size - nameHeight) / 2 + nameHeight;
+		this.bedrockux$faceSkin =
+				this.minecraft.getSkinManager().createLookup(this.minecraft.getGameProfile(), false);
+
+		if (config.showPlayerName) {
+			addPlayerName(centerX, this.bedrockux$faceY - nameHeight);
+		}
+	}
+
+	/**
+	 * Desenha o rosto da skin ampliado, com a camada de chapeu por cima.
+	 *
+	 * <p>Sai no RETURN para ficar acima do fundo da tela, e usa {@code blit} comum — o
+	 * caminho de GUI, que o shader pack nao substitui.
+	 */
+	@Inject(method = "extractRenderState", at = @At("RETURN"))
+	private void bedrockux$drawFaceFallback(GuiGraphicsExtractor context, int mouseX, int mouseY,
+			float partialTick, CallbackInfo callbackInfo) {
+		if (this.bedrockux$faceSkin == null) {
+			return;
+		}
+
+		PlayerSkin skin = this.bedrockux$faceSkin.get();
+
+		if (skin == null) {
+			return;
+		}
+
+		Identifier texture = skin.body().texturePath();
+		int x = this.bedrockux$faceX;
+		int y = this.bedrockux$faceY;
+		int size = this.bedrockux$faceSize;
+
+		context.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, FACE_U, FACE_V, size, size,
+				FACE_SIZE, FACE_SIZE, SKIN_TEXTURE_SIZE, SKIN_TEXTURE_SIZE);
+		context.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, HAT_U, FACE_V, size, size,
+				FACE_SIZE, FACE_SIZE, SKIN_TEXTURE_SIZE, SKIN_TEXTURE_SIZE);
 	}
 }

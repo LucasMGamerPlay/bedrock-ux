@@ -168,6 +168,7 @@ Arquivo gerado em `config/bedrockux.json` na primeira execução:
     "showPlayerModel": true,
     "showPlayerName": true,
     "modelFollowsMouse": true,
+    "hideModelWithShaders": true,
     "modelHeightFraction": 0.55,
     "maxModelHeight": 170,
     "modelCenterFraction": 0.82
@@ -543,3 +544,33 @@ condição (atmosférica, lava, cegueira, escuridão, efeito de poção). O
 do Bedrock começa mais perto e fecha mais denso que a do Java. É só isso que o
 `FogRendererMixin` faz, e por ser preferência — e por mexer na renderização do mundo — vem
 desligado por padrão.
+
+## Shader pack quebra o modelo da tela inicial
+
+Com um shader pack ativo (reproduzido com Photon + Iris), o modelo 3D do menu principal
+aparece deformado — membros cisalhados, geometria esticada. Sem shader, normal.
+
+**A causa não é o modelo.** Ele não é desenhado como GUI: passa pelo
+`PictureInPictureRenderer`, que renderiza pelo **caminho de entidades do jogo** para dentro
+de uma textura. É esse caminho que o shader pack substitui, e o shader espera dados do mundo
+— câmera, luz, normais. Na tela inicial não existe mundo, então ele transforma os vértices
+com dados nunca preenchidos.
+
+Isso fecha as duas pontas que confundiam:
+
+- **A Paper Doll não sofre disso** porque roda dentro de um mundo, onde os dados existem.
+- **Entrar num mundo e voltar "conserta"** porque aí o Iris já tem estado válido em cache.
+
+**O contorno:** `ShaderCompat` consulta `IrisApi.isShaderPackInUse()` **por reflexão**, sem
+criar dependência de compilação — o mod continua funcionando sem o Iris instalado. Com
+shader ativo, o modelo 3D dá lugar ao **rosto da skin em 2D**, que é um `blit` comum de GUI
+— caminho que o shader não substitui. Desligue com `hideModelWithShaders`.
+
+É contorno, não conserto: a causa está na interação entre o Iris e a renderização de
+entidade fora de um mundo, e não dá para resolver do lado do mod.
+
+### Testar compatibilidade no cliente de desenvolvimento
+
+Jars soltos em `run/mods/` são carregados pelo `runClient`, e `run/shaderpacks/` mais um
+`run/config/iris.properties` copiado do perfil reproduzem a configuração real. Foi assim que
+este bug saiu de "não reproduz aqui" para corrigido com verificação.

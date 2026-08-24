@@ -226,6 +226,12 @@ public final class BedrockUXConfig {
 		public boolean showPlayerName = true;
 		/** O personagem acompanha o cursor, como no menu do Bedrock. */
 		public boolean modelFollowsMouse = true;
+		/**
+		 * Esconde o modelo 3D quando ha shader pack ativo. Fora de um mundo o shader
+		 * deforma a entidade, e um boneco quebrado e pior do que nenhum. Desligue para ver
+		 * o comportamento cru.
+		 */
+		public boolean hideModelWithShaders = true;
 		/** Altura do modelo como fracao da tela. Fixo em pixels estoura em GUI scale alto. */
 		public float modelHeightFraction = 0.55F;
 		/** Teto absoluto de altura, para nao virar um gigante em telas muito altas. */
