@@ -587,6 +587,12 @@ comportamento antigo, com o corpo inteiro girando.
 A rotação da cabeça precisa vir **depois** do `resetPose()` de cada frame, que apaga qualquer
 transformação anterior.
 
+**O yaw da cabeça entra negado; o do corpo não.** O modelo é exibido de frente, ou seja,
+girado 180° em relação ao próprio "para frente", então um giro aplicado no espaço do modelo
+aparece espelhado na tela. O pitch não sofre disso, porque o eixo de inclinação não muda de
+sentido com esse giro — e foi exatamente esse o sintoma: cima e baixo certos, esquerda e
+direita trocados.
+
 **O alcance é normalizado por lado, não por metade de tela.** O modelo fica a 82% da largura
 e abaixo do centro vertical, então dividir pela metade da tela dava curso longo de um lado e
 curto do outro — o boneco encarava a esquerda mas mal virava para a direita. Medindo cada

@@ -370,8 +370,15 @@ public abstract class TitleScreenMixin extends Screen {
 		accessor.bedrockux$setRotationY(bodyYaw);
 		accessor.bedrockux$setRotationX(-bodyPitch);
 
-		bedrockux$rotateHead(accessor.bedrockux$getWideModel(), yaw - bodyYaw, pitch - bodyPitch);
-		bedrockux$rotateHead(accessor.bedrockux$getSlimModel(), yaw - bodyYaw, pitch - bodyPitch);
+		// O yaw da cabeca entra negado, o do corpo nao. O modelo e exibido de frente, ou seja,
+		// girado 180 graus em relacao ao proprio "para frente": um giro aplicado no espaco do
+		// modelo aparece espelhado na tela. O pitch nao sofre disso, porque o eixo de
+		// inclinacao nao muda de sentido com esse giro.
+		float headYaw = -(yaw - bodyYaw);
+		float headPitch = pitch - bodyPitch;
+
+		bedrockux$rotateHead(accessor.bedrockux$getWideModel(), headYaw, headPitch);
+		bedrockux$rotateHead(accessor.bedrockux$getSlimModel(), headYaw, headPitch);
 	}
 
 	/**
