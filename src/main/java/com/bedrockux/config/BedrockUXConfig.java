@@ -94,6 +94,7 @@ public final class BedrockUXConfig {
 		titleScreen.buttonHeight = Mth.clamp(titleScreen.buttonHeight, 12, 80);
 		titleScreen.menuWidthFraction = Mth.clamp(titleScreen.menuWidthFraction, 0.15F, 1.0F);
 		titleScreen.modelCenterFraction = Mth.clamp(titleScreen.modelCenterFraction, 0.0F, 1.0F);
+		titleScreen.bodyFollowFactor = Mth.clamp(titleScreen.bodyFollowFactor, 0.0F, 1.0F);
 		titleScreen.modelHeightFraction = Mth.clamp(titleScreen.modelHeightFraction, 0.1F, 1.0F);
 		titleScreen.maxModelHeight = Mth.clamp(titleScreen.maxModelHeight, 20, 600);
 	}
@@ -226,6 +227,12 @@ public final class BedrockUXConfig {
 		public boolean showPlayerName = true;
 		/** O personagem acompanha o cursor, como no menu do Bedrock. */
 		public boolean modelFollowsMouse = true;
+		/**
+		 * Quanto do giro o corpo absorve, de 0 a 1. O resto vai para a cabeca, que ganha
+		 * movimento proprio. {@code 1} faz o corpo inteiro girar e a cabeca ficar parada em
+		 * relacao a ele, como era antes.
+		 */
+		public float bodyFollowFactor = 0.35F;
 		/**
 		 * Esconde o modelo 3D quando ha shader pack ativo. Fora de um mundo o shader
 		 * deforma a entidade, e um boneco quebrado e pior do que nenhum. Desligue para ver

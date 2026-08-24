@@ -169,6 +169,7 @@ Arquivo gerado em `config/bedrockux.json` na primeira execução:
     "showPlayerName": true,
     "modelFollowsMouse": true,
     "hideModelWithShaders": true,
+    "bodyFollowFactor": 0.35,
     "modelHeightFraction": 0.55,
     "maxModelHeight": 170,
     "modelCenterFraction": 0.82
@@ -574,3 +575,26 @@ entidade fora de um mundo, e não dá para resolver do lado do mod.
 Jars soltos em `run/mods/` são carregados pelo `runClient`, e `run/shaderpacks/` mais um
 `run/config/iris.properties` copiado do perfil reproduzem a configuração real. Foi assim que
 este bug saiu de "não reproduz aqui" para corrigido com verificação.
+
+## Cabeça articulada no menu principal
+
+O `PlayerSkinWidget` só sabe girar o modelo inteiro. Para a cabeça ganhar movimento próprio,
+o giro é dividido: o corpo absorve `bodyFollowFactor` (padrão 0,35) via a rotação do widget,
+e **o restante do ângulo é aplicado direto na `ModelPart` da cabeça**. Assim ela sempre acaba
+apontada para o cursor, independente de quanto o corpo acompanhou. `1,0` devolve o
+comportamento antigo, com o corpo inteiro girando.
+
+A rotação da cabeça precisa vir **depois** do `resetPose()` de cada frame, que apaga qualquer
+transformação anterior.
+
+**O alcance é normalizado por lado, não por metade de tela.** O modelo fica a 82% da largura
+e abaixo do centro vertical, então dividir pela metade da tela dava curso longo de um lado e
+curto do outro — o boneco encarava a esquerda mas mal virava para a direita. Medindo cada
+lado pelo espaço que existe ali, o giro chega ao máximo nos dois sentidos.
+
+### Um detalhe de teste, não de código
+
+Mover o cursor por script e capturar não funciona se a janela não estiver focada: o jogo só
+processa movimento do mouse com foco, e focar **depois** de mover perde o evento. Duas
+rodadas de capturas saíram idênticas por causa disso, dando a impressão de que o giro não
+respondia. Focar uma vez, antes de tudo, e só então mover e capturar resolve.
