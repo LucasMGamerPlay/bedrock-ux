@@ -4,6 +4,7 @@ import com.bedrockux.config.BedrockUXConfig;
 import com.bedrockux.config.ConfigManager;
 import com.bedrockux.hud.CoordinatesHudElement;
 import com.bedrockux.hud.PaperDollHudElement;
+import com.bedrockux.loading.LoadingTips;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -21,6 +22,7 @@ public final class BedrockUXClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		BedrockUX.setConfig(ConfigManager.load());
+		LoadingTips.load();
 
 		// A ordem importa e e a do Bedrock: o boneco abre a pilha do canto superior esquerdo
 		// e reinicia o cursor de layout; as coordenadas se encaixam logo abaixo dele.
@@ -73,6 +75,7 @@ public final class BedrockUXClient implements ClientModInitializer {
 
 		while (reloadConfigKey.consumeClick()) {
 			BedrockUX.setConfig(ConfigManager.load());
+		LoadingTips.load();
 			showOverlayMessage(minecraft, "text.bedrockux.config_reloaded");
 		}
 	}

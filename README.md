@@ -53,12 +53,12 @@ e Fase 3 (transições) vão precisar de um desenho diferente do que o GDD imagi
 | ID | Feature | Status |
 |---|---|---|
 | UI-02 | HUD de coordenadas | ✅ Fase 1 |
-| — | Botões com cores planas do Bedrock | ✅ Fase 1 |
+| — | Botões com a paleta do Bedrock | ✅ Fase 1 / revisto na Fase 3 |
 | UI-01 | Paper Doll | ✅ Fase 2 |
 | UI-03 | Margens do chat | ➖ não aplicável (ver abaixo) |
-| UI-04 | Menu principal | ⬜ Fase 3 |
-| UI-05 | Transições de tela | ⬜ Fase 3 |
-| UI-07 | Tela de carregamento | ⬜ Fase 3 |
+| UI-04 | Menu principal | ✅ Fase 3 |
+| UI-05 | Transições de tela | ✅ Fase 3 |
+| UI-07 | Tela de carregamento | ✅ Fase 3 |
 | UI-06 | Sons de UI | ⬜ Fase 4 |
 | UI-08 | Água e névoa | ⬜ Fase 4 |
 
@@ -126,7 +126,41 @@ Arquivo gerado em `config/bedrockux.json` na primeira execução:
     "headPitchLimit": 35.0
   },
   "buttons": {
-    "enabled": true
+    "enabled": true,
+    "semanticColors": true
+  },
+  "loadingScreen": {
+    "enabled": true,
+    "showTips": true,
+    "showLogo": true,
+    "panelWidth": 260,
+    "barHeight": 6
+  },
+  "messageScreen": {
+    "enabled": true,
+    "showLogo": true,
+    "showSavingIcon": true,
+    "panelWidth": 260
+  },
+  "transitions": {
+    "enabled": true,
+    "durationMillis": 180,
+    "slideDistance": 24.0
+  },
+  "titleScreen": {
+    "enabled": true,
+    "columns": 1,
+    "buttonWidth": 180,
+    "buttonHeight": 28,
+    "columnGap": 8,
+    "rowGap": 6,
+    "menuWidthFraction": 0.34,
+    "showPlayerModel": true,
+    "showPlayerName": true,
+    "modelFollowsMouse": true,
+    "modelHeightFraction": 0.55,
+    "maxModelHeight": 170,
+    "modelCenterFraction": 0.82
   }
 }
 ```
@@ -248,3 +282,180 @@ Ao aumentar `scale`, aumente as dimensões junto.
 acomodar a Paper Doll, o que pressupõe o boneco perto do chat. Como UI-01 pede o canto
 superior esquerdo e o chat fica no inferior esquerdo, não há sobreposição. Se a Paper Doll
 for movida para baixo, o item volta a fazer sentido.
+
+## Notas da Fase 3
+
+**UI-04 reposiciona, não reconstrói.** O Mixin entra em `TitleScreen.init` no `TAIL` e move
+os botões que o vanilla já criou, em vez de montar o menu do zero. Assim os handlers de
+clique, as tooltips e os botões que outros mods adicionam continuam funcionando, e o layout
+sobrevive às variações do próprio jogo (modo demo, Realms desligado).
+
+Os botões são identificados por **largura e altura**: largura ≥ 90 pega os principais e
+ignora os de ícone 20×20; altura exatamente 20 descarta o texto de direitos autorais, que é
+um `PlainTextButton` clicável largo o bastante para passar pelo filtro de largura sozinho.
+
+O layout segue as capturas reais em `Fotos de Menus direto do Minecraft Bedrock Como
+exemplo/`: **coluna única centralizada** com botões altos, não uma grade — a planilha dizia
+"grid", mas o Bedrock empilha numa coluna só. Os botões de ícone (idioma, acessibilidade)
+vão para o canto inferior esquerdo, que é onde o Bedrock põe seus atalhos equivalentes, e
+onde não colidem com a coluna.
+
+Largura **e** altura são derivadas do espaço disponível, com o config servindo de teto.
+Valores fixos estouram a tela em janelas pequenas ou GUI scale alto: a largura invadia a
+área do modelo, e a altura empurrava o último botão para fora da tela.
+
+**O modelo do menu não é a Paper Doll.** No menu principal não existe entidade de jogador
+(`Minecraft.player` é `null`), então `createRenderState` não serve. O 26.2 tem
+`PlayerSkinWidget`, que renderiza a skin a partir de um `Model.Simple` sem precisar de
+entidade — alimentado por `SkinManager.createLookup(perfil, false)`. De brinde ele já é
+arrastável para girar, como no Bedrock. O nome da conta fica acima dele, e o bloco inteiro
+(nome + modelo) é centralizado na faixa abaixo do logo — ancorar pelo modelo fazia o nome
+subir por cima do logo.
+
+## Paleta dos botões
+
+As cores **não foram estimadas** — saíram de amostragem pixel a pixel das capturas em
+`Fotos de Menus direto do Minecraft Bedrock Como exemplo/`. A anatomia de um botão do
+Bedrock, de cima para baixo: borda externa, linha de brilho, corpo, linha de sombra, borda
+externa.
+
+| Variante | Corpo | Borda | Brilho | Sombra | Texto |
+|---|---|---|---|---|---|
+| Secundária (padrão) | `#C6C6C6` | `#131313` | `#F7F7F7` | `#656465` | `#4C4C4C` |
+| Primária (verde) | `#3C8527` | `#1E1E1F` | `#639D52` | `#1D4D13` | `#FFFFFF` |
+| Destaque (Realms) | `#7345E5` | `#131313` | `#A164F2` | `#4A1CAC` | `#FFFFFF` |
+
+**O rótulo precisou ser redesenhado.** O fundo do Bedrock é claro, e o texto branco do
+vanilla ficaria ilegível. Não dá para só trocar a cor: o rótulo passa por
+`ActiveTextCollector`, cujo `Parameters` tem pose, opacidade e scissor — e nenhuma cor. A
+saída foi cancelar `extractDefaultLabel` e desenhar o texto em `extractDefaultSprite`, onde
+o extractor está em mãos.
+
+Isso é seguro porque **nenhuma classe do jogo chama `extractDefaultLabel` sem chamar
+`extractDefaultSprite`** (verificado varrendo o client.jar): todo rótulo suprimido pertence
+a um botão cujo fundo repintamos. O custo é a rolagem que o vanilla faz em rótulos longos
+demais, que aqui vira corte simples.
+
+A exceção é `SpriteIconButton.TextAndIcon`, que desenha o próprio texto fora do
+`extractDefaultLabel` — como não dá para recolori-lo, esses botões mantêm o visual do
+vanilla em vez de virarem texto branco sobre fundo claro.
+
+**Variantes semânticas** são mapeadas por chave de tradução (não por texto, para valer em
+qualquer idioma) em `AbstractButtonMixin`. O Java não tem noção de "ação primária", então a
+lista é manual e cresce conforme as telas forem cobertas: hoje cobre `selectWorld.create`,
+`selectWorld.select`, `gui.done` (verde) e `menu.online` (roxo). Desligue com
+`buttons.semanticColors`.
+
+## O modelo do menu principal
+
+`PlayerSkinWidget` deriva a escala **só da altura** (`0.97 × altura / 2.125`); a largura
+serve apenas de recorte. Isso tem duas consequências que morderam:
+
+- **Altura fixa estoura em GUI scale alto.** Um valor de 170 unidades vira mais da metade
+  da tela quando o scale é 4, o modelo passa do rodapé e o recorte da caixa corta o
+  personagem ao meio. A altura agora vem de `modelHeightFraction` (fração da tela), com
+  `maxModelHeight` de teto.
+- **Caixa estreita corta os braços.** Como a largura não influencia a escala, ela precisa
+  acompanhar a altura. É derivada com `MODEL_ASPECT = 0.75`, com folga para o modelo girado.
+
+**Seguir o cursor** (`modelFollowsMouse`) reescreve `rotationX` / `rotationY` a cada frame a
+partir da posição do mouse, via accessor — o widget do vanilla só gira quando arrastado. Os
+ângulos são normalizados pela metade da tela, então o giro é o mesmo em qualquer resolução.
+
+Consequência a saber: com `modelFollowsMouse` ligado, **arrastar não funciona**, porque a
+rotação é sobrescrita todo frame. Ponha `false` para voltar ao giro manual do vanilla.
+
+## Notas da UI-05 e UI-07
+
+**A transição desliza pela matriz, não por framebuffer.** O GDD propunha guardar a tela
+anterior num buffer e interpolar as duas. No modelo retained-mode do 26.2 isso exigiria
+capturar framebuffer a cada troca de tela. Empurrar a matriz de `GuiGraphicsExtractor.pose()`
+dá o mesmo efeito percebido sem tocar em framebuffer — e foi verificado deslocando a tela
+inteira 100px de propósito: logo, botões, ícones e rodapé acompanham.
+
+Três armadilhas custaram um ciclo cada até a animação aparecer:
+
+1. **`Screen.extractRenderState` é o alvo errado.** Quase toda tela o sobrescreve sem chamar
+   `super`, então o hook nunca rodava. O alvo certo é
+   `extractRenderStateWithTooltipAndSubtitles`, que é `final`.
+2. **`added()` não serve de âncora** — nem toda tela passa por ele. `init(int,int)` é `final`
+   e sempre roda.
+3. **O relógio não pode começar em `init`.** A tela inicial é construída enquanto o overlay
+   de carregamento ainda cobre tudo, então a animação inteira acontecia escondida. O relógio
+   começa no **primeiro frame desenhado**.
+
+Duas limitações conhecidas:
+
+- **Na tela inicial, ao abrir o jogo, a animação continua invisível.** A tela é desenhada
+  atrás do overlay que faz fade, então até o primeiro frame já está coberto. Em navegação
+  normal entre telas o deslize aparece.
+- **O modelo do jogador não desliza junto.** `PlayerSkinWidget` e a Paper Doll desenham pelo
+  caminho picture-in-picture, que usa coordenadas de tela próprias e ignora a pose.
+
+**As dicas de carregamento** ficam em `assets/bedrockux/loading_tips.json` como **chaves de
+tradução**, não texto pronto — assim acompanham o idioma do jogo. Um
+`config/bedrockux-tips.json` substitui a lista embutida; texto literal também funciona, e o
+que não existir no idioma aparece como está. O progresso reaproveita o `smoothedProgress`
+que o próprio jogo já suaviza, então não há nada a sincronizar com o threading de chunks —
+que era a preocupação anotada na planilha.
+
+## Painel de carregamento (revisão pela referência)
+
+A primeira versão da UI-07 pintava a tela inteira de escuro com uma barra cinza contínua.
+As capturas `tela de caregamento.png` e `tela de salvamento.png` mostraram que o Bedrock faz
+outra coisa: o mundo continua visível ao fundo, com o logo no topo e um **painel** centrado.
+
+Anatomia amostrada pixel a pixel:
+
+| Elemento | Cor |
+|---|---|
+| Borda externa do painel | `#000000` |
+| Realce branco (2px) | `#FFFFFF` |
+| Corpo do painel | `#C6C6C6` |
+| Sombra inferior | `#555555` |
+| Título ("Carregando") | `#4C4C4C` |
+| Borda da caixa interna | `#393939` |
+| Interior da caixa | `#0A0909` a ~80% — **translúcido**, o mundo aparece atrás |
+| Barra: segmento cheio | `#96D464` (topo `#AEEE7A`) |
+| Barra: segmento vazio | `#416032` |
+
+Dois detalhes que só a referência revelou: a barra é **segmentada**, não um preenchimento
+contínuo — os segmentos vazios ficam verde-escuro em vez de sumirem, e é isso que dá o
+aspecto de trilho tracejado. E a dica fica **dentro** da caixa, acima da barra, com quebra
+de linha automática — não abaixo dela.
+
+O mesmo painel serve para as telas de mensagem (`GenericMessageScreen`): salvar mundo,
+conectar, carregar.
+
+**A tela do Bedrock mostra duas frases, a do Java carrega uma só.** A referência tem um
+título curto ("Salvando mundo") e uma explicação ("Seu jogo está sendo salvo. Não desligue o
+dispositivo."), mas `GenericMessageScreen` recebe um único `Component`. A solução: a
+mensagem do vanilla vira o **título** e o corpo sai de um mapa próprio, por chave de
+tradução — hoje só `menu.savingLevel`. Telas fora do mapa ganham só o cabeçalho, sem a
+caixa; inventar texto para elas seria pior do que não mostrar nada.
+
+O texto do vanilla é escondido (`visible = false`) para não duplicar o cabeçalho. O widget
+continua existindo, então a narração de acessibilidade segue funcionando — some apenas o
+desenho.
+
+## O ícone animado do salvamento
+
+**O Minecraft não lê GIF.** O baú animado veio de um GIF de 52 quadros a 100 ms, 518×518 com
+fundo transparente, convertido para uma **folha de sprites vertical**: 52 quadros de 32×32
+empilhados em `assets/bedrockux/textures/gui/saving_icon.png` (32×1664).
+
+O desenho recorta a linha do quadro atual pela coordenada V:
+
+```java
+int frame = (int) ((System.currentTimeMillis() / 100L) % 52);
+context.blit(RenderPipelines.GUI_TEXTURED, icone, x, y,
+        0.0F, frame * 32.0F, 32, 32, 32, 32 * 52);
+```
+
+A animação anda pelo **relógio do sistema, não por ticks do jogo**: durante o salvamento o
+jogo trava por instantes, e um contador de ticks faria o ícone engasgar justamente quando
+ele precisa mostrar que algo está acontecendo.
+
+Para reconverter a partir de outro GIF, o passo é: redimensionar cada quadro para 32×32,
+empilhar verticalmente, salvar como PNG com alfa, e ajustar `ICON_FRAMES` /
+`ICON_FRAME_MILLIS` no `GenericMessageScreenMixin`.

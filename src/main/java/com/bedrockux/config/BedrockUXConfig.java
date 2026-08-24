@@ -12,6 +12,10 @@ public final class BedrockUXConfig {
 	public Coordinates coordinates = new Coordinates();
 	public PaperDoll paperDoll = new PaperDoll();
 	public Buttons buttons = new Buttons();
+	public Transitions transitions = new Transitions();
+	public LoadingScreen loadingScreen = new LoadingScreen();
+	public MessageScreen messageScreen = new MessageScreen();
+	public TitleScreen titleScreen = new TitleScreen();
 
 	/** Corrige valores invalidos vindos de um arquivo editado a mao. */
 	public void sanitize() {
@@ -27,6 +31,22 @@ public final class BedrockUXConfig {
 			buttons = new Buttons();
 		}
 
+		if (titleScreen == null) {
+			titleScreen = new TitleScreen();
+		}
+
+		if (transitions == null) {
+			transitions = new Transitions();
+		}
+
+		if (loadingScreen == null) {
+			loadingScreen = new LoadingScreen();
+		}
+
+		if (messageScreen == null) {
+			messageScreen = new MessageScreen();
+		}
+
 		coordinates.backgroundOpacity = Mth.clamp(coordinates.backgroundOpacity, 0.0F, 1.0F);
 		coordinates.offsetX = Mth.clamp(coordinates.offsetX, 0, 512);
 		coordinates.offsetY = Mth.clamp(coordinates.offsetY, 0, 512);
@@ -40,6 +60,23 @@ public final class BedrockUXConfig {
 		paperDoll.scale = Mth.clamp(paperDoll.scale, 1.0F, 200.0F);
 		paperDoll.tiltDegrees = Mth.clamp(paperDoll.tiltDegrees, -60.0F, 60.0F);
 		paperDoll.headPitchLimit = Mth.clamp(paperDoll.headPitchLimit, 0.0F, 90.0F);
+
+		loadingScreen.panelWidth = Mth.clamp(loadingScreen.panelWidth, 80, 800);
+		messageScreen.panelWidth = Mth.clamp(messageScreen.panelWidth, 80, 800);
+		loadingScreen.barHeight = Mth.clamp(loadingScreen.barHeight, 3, 40);
+
+		transitions.durationMillis = Mth.clamp(transitions.durationMillis, 0, 2000);
+		transitions.slideDistance = Mth.clamp(transitions.slideDistance, -400.0F, 400.0F);
+
+		titleScreen.columns = Mth.clamp(titleScreen.columns, 1, 4);
+		titleScreen.buttonWidth = Mth.clamp(titleScreen.buttonWidth, 40, 400);
+		titleScreen.columnGap = Mth.clamp(titleScreen.columnGap, 0, 64);
+		titleScreen.rowGap = Mth.clamp(titleScreen.rowGap, 0, 64);
+		titleScreen.buttonHeight = Mth.clamp(titleScreen.buttonHeight, 12, 80);
+		titleScreen.menuWidthFraction = Mth.clamp(titleScreen.menuWidthFraction, 0.15F, 1.0F);
+		titleScreen.modelCenterFraction = Mth.clamp(titleScreen.modelCenterFraction, 0.0F, 1.0F);
+		titleScreen.modelHeightFraction = Mth.clamp(titleScreen.modelHeightFraction, 0.1F, 1.0F);
+		titleScreen.maxModelHeight = Mth.clamp(titleScreen.maxModelHeight, 20, 600);
 	}
 
 	/** UI-02: coordenadas no estilo Bedrock. */
@@ -96,5 +133,59 @@ public final class BedrockUXConfig {
 	/** Fase 1: cores planas dos botoes no lugar das texturas do vanilla. */
 	public static final class Buttons {
 		public boolean enabled = true;
+		/** Verde para acao primaria e roxo no Realms, como no Bedrock. */
+		public boolean semanticColors = true;
+	}
+
+	/** UI-07: barra continua e dicas no lugar do mapa de chunks do vanilla. */
+	public static final class LoadingScreen {
+		public boolean enabled = true;
+		public boolean showTips = true;
+		/** O Bedrock mostra o logo acima do painel de carregamento. */
+		public boolean showLogo = true;
+		public int panelWidth = 260;
+		public int barHeight = 6;
+	}
+
+	/** UI-07 (parte 2): painel do Bedrock nas telas de mensagem (salvar, conectar). */
+	public static final class MessageScreen {
+		public boolean enabled = true;
+		public boolean showLogo = true;
+		/** Bau animado no meio do painel, como no salvamento do Bedrock. */
+		public boolean showSavingIcon = true;
+		public int panelWidth = 260;
+	}
+
+	/** UI-05: telas deslizam ao abrir, em vez de aparecerem secas. */
+	public static final class Transitions {
+		public boolean enabled = true;
+		public int durationMillis = 180;
+		/** Deslocamento inicial em pixels de GUI. Negativo faz entrar pela esquerda. */
+		public float slideDistance = 24.0F;
+	}
+
+	/** UI-04: menu principal com botoes em grade e o modelo do jogador a direita. */
+	public static final class TitleScreen {
+		public boolean enabled = true;
+		/** Colunas da pilha de botoes. O Bedrock usa uma coluna unica centralizada. */
+		public int columns = 1;
+		public int buttonWidth = 180;
+		/** O botao do Bedrock e bem mais alto que os 20 do Java. */
+		public int buttonHeight = 28;
+		public int columnGap = 8;
+		public int rowGap = 6;
+		/** Teto de largura da coluna, como fracao da tela. */
+		public float menuWidthFraction = 0.34F;
+		public boolean showPlayerModel = true;
+		/** Nome da conta acima do modelo, como no Bedrock. */
+		public boolean showPlayerName = true;
+		/** O personagem acompanha o cursor, como no menu do Bedrock. */
+		public boolean modelFollowsMouse = true;
+		/** Altura do modelo como fracao da tela. Fixo em pixels estoura em GUI scale alto. */
+		public float modelHeightFraction = 0.55F;
+		/** Teto absoluto de altura, para nao virar um gigante em telas muito altas. */
+		public int maxModelHeight = 170;
+		/** Centro da area do modelo, como fracao da largura da tela. */
+		public float modelCenterFraction = 0.82F;
 	}
 }

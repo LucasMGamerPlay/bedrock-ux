@@ -4,7 +4,12 @@
 	"compatibilityLevel": "JAVA_25",
 	"client": [
 		"AbstractButtonMixin",
-		"AbstractWidgetAccessor"
+		"AbstractWidgetAccessor",
+		"GenericMessageScreenMixin",
+		"LevelLoadingScreenMixin",
+		"PlayerSkinWidgetAccessor",
+		"ScreenTransitionMixin",
+		"TitleScreenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

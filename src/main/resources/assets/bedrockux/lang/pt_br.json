@@ -14,5 +14,17 @@
 	"text.bedrockux.direction.north": "Norte",
 	"text.bedrockux.direction.south": "Sul",
 	"text.bedrockux.direction.east": "Leste",
-	"text.bedrockux.direction.west": "Oeste"
+	"text.bedrockux.direction.west": "Oeste",
+	"tip.bedrockux.crafting_table": "Faça uma bancada com quatro tábuas para liberar a maioria das receitas.",
+	"tip.bedrockux.bed": "Dormir numa cama define seu ponto de renascimento e pula a noite.",
+	"tip.bedrockux.torch": "Tochas impedem que monstros apareçam por perto.",
+	"tip.bedrockux.water_bucket": "Um balde de água anula qualquer queda, não importa a altura.",
+	"tip.bedrockux.boat": "Barcos são o jeito mais rápido de atravessar água aberta.",
+	"tip.bedrockux.shield": "Segure um escudo para bloquear flechas e golpes corpo a corpo.",
+	"tip.bedrockux.compass": "A bússola sempre aponta para o spawn do mundo.",
+	"tip.bedrockux.sneak": "Agachar impede que você caia das bordas.",
+	"tip.bedrockux.food": "Comer mantém a fome cheia, e fome cheia regenera sua vida.",
+	"tip.bedrockux.creeper": "Creepers têm medo de gatos e jaguatiricas.",
+	"text.bedrockux.loading.title": "Carregando",
+	"text.bedrockux.message.saving": "Seu jogo está sendo salvo. Não desligue o dispositivo."
 }

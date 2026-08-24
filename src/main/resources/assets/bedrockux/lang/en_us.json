@@ -14,5 +14,17 @@
 	"text.bedrockux.direction.north": "North",
 	"text.bedrockux.direction.south": "South",
 	"text.bedrockux.direction.east": "East",
-	"text.bedrockux.direction.west": "West"
+	"text.bedrockux.direction.west": "West",
+	"tip.bedrockux.crafting_table": "Craft a crafting table from four wooden planks to unlock most recipes.",
+	"tip.bedrockux.bed": "Sleeping in a bed sets your spawn point and skips the night.",
+	"tip.bedrockux.torch": "Torches stop hostile mobs from spawning nearby.",
+	"tip.bedrockux.water_bucket": "A bucket of water breaks any fall, no matter the height.",
+	"tip.bedrockux.boat": "Boats are the fastest way to cross open water.",
+	"tip.bedrockux.shield": "Hold a shield to block arrows and melee hits.",
+	"tip.bedrockux.compass": "A compass always points to your world spawn.",
+	"tip.bedrockux.sneak": "Sneaking keeps you from falling off edges.",
+	"tip.bedrockux.food": "Eating keeps your hunger up, and full hunger heals you over time.",
+	"tip.bedrockux.creeper": "Creepers are afraid of cats and ocelots.",
+	"text.bedrockux.loading.title": "Loading",
+	"text.bedrockux.message.saving": "Your game is being saved. Do not turn off the device."
 }
