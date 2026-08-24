@@ -42,3 +42,8 @@ replay_*.log
 # configuracao local da maquina (caminhos de perfil de teste, etc.)
 
 local.properties
+
+# referencias visuais: versionamos as JPEG (~4,7 MB); os PNG originais (~20 MB)
+# ficam so na maquina
+
+Fotos de Menus direto do Minecraft Bedrock Como exemplo/*.png
