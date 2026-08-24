@@ -13,6 +13,8 @@ public final class BedrockUXConfig {
 	public PaperDoll paperDoll = new PaperDoll();
 	public Buttons buttons = new Buttons();
 	public Transitions transitions = new Transitions();
+	public Sounds sounds = new Sounds();
+	public Fog fog = new Fog();
 	public LoadingScreen loadingScreen = new LoadingScreen();
 	public MessageScreen messageScreen = new MessageScreen();
 	public TitleScreen titleScreen = new TitleScreen();
@@ -39,6 +41,14 @@ public final class BedrockUXConfig {
 			transitions = new Transitions();
 		}
 
+		if (sounds == null) {
+			sounds = new Sounds();
+		}
+
+		if (fog == null) {
+			fog = new Fog();
+		}
+
 		if (loadingScreen == null) {
 			loadingScreen = new LoadingScreen();
 		}
@@ -60,10 +70,19 @@ public final class BedrockUXConfig {
 		paperDoll.scale = Mth.clamp(paperDoll.scale, 1.0F, 200.0F);
 		paperDoll.tiltDegrees = Mth.clamp(paperDoll.tiltDegrees, -60.0F, 60.0F);
 		paperDoll.headPitchLimit = Mth.clamp(paperDoll.headPitchLimit, 0.0F, 90.0F);
+		paperDoll.flyingWidthMultiplier = Mth.clamp(paperDoll.flyingWidthMultiplier, 1.0F, 4.0F);
+		paperDoll.flyingTiltDegrees = Mth.clamp(paperDoll.flyingTiltDegrees, -80.0F, 80.0F);
+		paperDoll.flyingPitchScale = Mth.clamp(paperDoll.flyingPitchScale, 0.0F, 1.0F);
 
 		loadingScreen.panelWidth = Mth.clamp(loadingScreen.panelWidth, 80, 800);
 		messageScreen.panelWidth = Mth.clamp(messageScreen.panelWidth, 80, 800);
 		loadingScreen.barHeight = Mth.clamp(loadingScreen.barHeight, 3, 40);
+
+		fog.startMultiplier = Mth.clamp(fog.startMultiplier, 0.1F, 2.0F);
+		fog.endMultiplier = Mth.clamp(fog.endMultiplier, 0.1F, 2.0F);
+
+		sounds.clickPitch = Mth.clamp(sounds.clickPitch, 0.5F, 2.0F);
+		sounds.clickVolume = Mth.clamp(sounds.clickVolume, 0.0F, 1.0F);
 
 		transitions.durationMillis = Mth.clamp(transitions.durationMillis, 0, 2000);
 		transitions.slideDistance = Mth.clamp(transitions.slideDistance, -400.0F, 400.0F);
@@ -117,11 +136,19 @@ public final class BedrockUXConfig {
 		 */
 		public float yawOffsetDegrees = 20.0F;
 		/**
-		 * Mantem o boneco em pe durante elytra, nado e tridente. Sem isso o vanilla deita o
-		 * modelo na horizontal, que nao cabe na caixa e sai cortado. Desligue para ver a
-		 * pose crua de voo.
+		 * Forca o boneco a ficar em pe durante elytra, nado e tridente. O Bedrock mostra a
+		 * pose deitada, entao o padrao e falso; ligue se preferir o boneco sempre ereto.
 		 */
-		public boolean uprightWhileFlying = true;
+		public boolean uprightWhileFlying = false;
+		/** Quanto a caixa alarga nas poses deitadas, para as asas nao saírem cortadas. */
+		public float flyingWidthMultiplier = 2.0F;
+		/** Inclinacao extra da camera nas poses deitadas. O Bedrock mantem a vista de frente. */
+		public float flyingTiltDegrees = 0.0F;
+		/**
+		 * Fracao da inclinacao de mergulho que o boneco mostra, de 0 (ereto) a 1 (o mergulho
+		 * completo do vanilla). O Bedrock inclina de leve e mantem o personagem de frente.
+		 */
+		public float flyingPitchScale = 1.0F;
 		/**
 		 * Limite do pitch da cabeca, em graus. Sem limite, olhar para cima deixa a cabeca
 		 * quase na horizontal e o boneco fica ilegivel numa caixa pequena. 90 desliga o
@@ -154,6 +181,24 @@ public final class BedrockUXConfig {
 		/** Bau animado no meio do painel, como no salvamento do Bedrock. */
 		public boolean showSavingIcon = true;
 		public int panelWidth = 260;
+	}
+
+	/** UI-08: curva de nevoa mais apertada, como no Bedrock. */
+	public static final class Fog {
+		/** Desligado por padrao: mexe na renderizacao do mundo, onde mods de otimizacao brigam. */
+		public boolean enabled = false;
+		/** Abaixo de 1 traz o inicio da nevoa para mais perto. */
+		public float startMultiplier = 0.6F;
+		/** Abaixo de 1 fecha a nevoa antes, deixando-a mais densa. */
+		public float endMultiplier = 0.85F;
+	}
+
+	/** UI-06: clique de UI reafinado para o toque agudo do Bedrock. */
+	public static final class Sounds {
+		public boolean enabled = true;
+		/** Acima de 1 deixa mais agudo; o vanilla usa 1.0. */
+		public float clickPitch = 1.6F;
+		public float clickVolume = 0.5F;
 	}
 
 	/** UI-05: telas deslizam ao abrir, em vez de aparecerem secas. */

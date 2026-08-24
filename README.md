@@ -59,8 +59,8 @@ e Fase 3 (transições) vão precisar de um desenho diferente do que o GDD imagi
 | UI-04 | Menu principal | ✅ Fase 3 |
 | UI-05 | Transições de tela | ✅ Fase 3 |
 | UI-07 | Tela de carregamento | ✅ Fase 3 |
-| UI-06 | Sons de UI | ⬜ Fase 4 |
-| UI-08 | Água e névoa | ⬜ Fase 4 |
+| UI-06 | Sons de UI | ✅ Fase 4 |
+| UI-08 | Água e névoa | 🟡 névoa: ajuste opcional · água: **obsoleto**, já é nativo |
 
 ## Como rodar
 
@@ -141,6 +141,16 @@ Arquivo gerado em `config/bedrockux.json` na primeira execução:
     "showLogo": true,
     "showSavingIcon": true,
     "panelWidth": 260
+  },
+  "sounds": {
+    "enabled": true,
+    "clickPitch": 1.6,
+    "clickVolume": 0.5
+  },
+  "fog": {
+    "enabled": false,
+    "startMultiplier": 0.6,
+    "endMultiplier": 0.85
   },
   "transitions": {
     "enabled": true,
@@ -256,14 +266,36 @@ modelo por `Axis.YP.rotationDegrees(180 - bodyRot)` — ou seja, o ângulo que a
 mesma inversão vale para o offset corpo/cabeça: numa câmera posicionada de frente, o giro
 do corpo aparece espelhado.
 
-**Poses horizontais são neutralizadas.** Voando de elytra, o `AvatarRenderer` aplica
-`Axis.XP.rotationDegrees(fallFlyingScale * (-90 - xRot))`, e nado e tridente têm
-transformações equivalentes. Na tela cheia isso é o certo; numa caixa de 44×66 o modelo
-deitado não cabe e sai cortado. Com `uprightWhileFlying` (padrão `true`), as flags
-`isFallFlying`, `isVisuallySwimming`, `swimAmount` e `isAutoSpinAttack` são zeradas e o
-boneco fica em pé — a animação dos membros continua indicando o estado. Pose `SLEEPING`
-também vira `STANDING`, porque dormindo o vanilla pula a rotação do corpo por completo e o
-boneco travaria virado. Ponha `false` para ver a pose crua.
+**Poses horizontais são reenquadradas, não neutralizadas.** Voando de elytra, o
+`AvatarRenderer` aplica `Axis.XP.rotationDegrees(fallFlyingScale * (-90 - xRot))`, e nado e
+tridente têm transformações equivalentes. O Bedrock mostra essa pose deitada, então o mod
+mantém — mas ela exige três ajustes, porque a caixa é um recorte real:
+
+1. **A caixa alarga** (`flyingWidthMultiplier`, padrão 2×). Deitado, o modelo ocupa no
+   comprimento o que ocupava na altura, e as asas abrem ainda mais. A altura fica igual de
+   propósito: mudá-la faria a caixa de coordenadas pular de lugar toda vez que o jogador
+   voasse.
+2. **A translação vertical zera.** Em pé, o modelo cresce dos pés para cima e a translação
+   de meia altura o centraliza. Deitado ele gira em torno dos pés e se estende em
+   profundidade — a mesma translação só o empurrava para fora da caixa, que era o bug de
+   "sumir ao voar".
+3. **O eixo de rotação acompanha a inclinação.** O modelo gira em torno dos **pés**, não do
+   centro, então uma translação fixa deixa o boneco pendurado pelos pés em vez de girar no
+   lugar. A translação usa `metadeAltura · cos(ânguloAplicado)`: em pé (0°) dá meia altura,
+   deitado (90°) dá zero, porque aí o centro do corpo está na altura dos pés.
+
+   A altura vem do **modelo**, não da caixa delimitadora — voando ela encolhe de 1,8 para
+   0,6, e centralizar por ela cortava a cabeça e as asas no topo.
+
+4. **O limite de pitch não vale em voo.** `headPitchLimit` existe para a cabeça não deitar
+   com o boneco em pé, mas durante o voo o mesmo `xRot` comanda a inclinação do corpo
+   inteiro — limitar ali impedia o boneco de virar para baixo ao mergulhar.
+
+5. **`flyingPitchScale`** (padrão 1,0) permite amortecer o mergulho, se desejado.
+
+`uprightWhileFlying` (padrão `false`) volta ao comportamento antigo, forçando o boneco em pé.
+Ele também converte pose `SLEEPING` em `STANDING`, porque dormindo o vanilla pula a rotação
+do corpo por completo e o boneco travaria virado.
 
 **Ordem da pilha.** No Bedrock o boneco fica em cima e as coordenadas embaixo. Quem define
 isso é a ordem de registro em `HudElementRegistry.addLast`: a Paper Doll roda primeiro e
@@ -459,3 +491,55 @@ ele precisa mostrar que algo está acontecendo.
 Para reconverter a partir de outro GIF, o passo é: redimensionar cada quadro para 32×32,
 empilhar verticalmente, salvar como PNG com alfa, e ajustar `ICON_FRAMES` /
 `ICON_FRAME_MILLIS` no `GenericMessageScreenMixin`.
+
+## Notas da Fase 4
+
+**UI-06 reafina o som, não traz áudio novo.** Não dá para sintetizar um OGG aqui, e
+distribuir o som do Bedrock seria copiar asset da Mojang. O Mixin toca o
+`minecraft:ui.button.click` do próprio jogo com tom mais alto e volume menor
+(`clickPitch` 1.6, `clickVolume` 0.5), o que aproxima do toque curto e agudo do original.
+Quem quiser o som exato pode substituir o evento por um resource pack — o Mixin continua
+respeitando o arquivo que estiver no lugar.
+
+**UI-08 (névoa) vem desligada por padrão.** É a única feature do mod que mexe na
+renderização do mundo, que é onde mods de otimização brigam. Ligue com `fog.enabled`.
+
+O ajuste é multiplicativo sobre o que o jogo calculou, não um valor fixo: bioma, clima,
+distância de renderização e efeitos como cegueira continuam mandando, e o mod só aperta a
+curva (`startMultiplier` traz o início para perto, `endMultiplier` fecha antes). `skyEnd` e
+`cloudEnd` ficam intactos — mexer neles desloca o horizonte e as nuvens, que no Bedrock não
+acompanham a névoa próxima.
+
+**Sobre o Sodium.** Ele também entra em `FogRenderer`, com `@Inject` para ler os parâmetros
+e alimentar o próprio renderizador — não com `@Overwrite`, então dá para coexistir. Mas a
+ordem importa: este Mixin usa `priority = 900` (abaixo do padrão 1000) para ser aplicado
+antes, de modo que o Sodium leia os valores já ajustados. Sem isso a névoa mudaria sem
+Sodium e ficaria vanilla com ele.
+
+**Isso ainda não foi verificado com o Sodium instalado.** O cliente de desenvolvimento não
+tem Sodium; quem tem é o perfil `voxy teste`. A verificação precisa de uma execução por lá.
+
+## O que o plano original previa e o jogo já resolveu
+
+O GDD e a planilha foram escritos para uma versão bem mais antiga do Java, e parte do escopo
+envelheceu. Verificado no `client.jar` do 26.2:
+
+**Colormap de água por bioma já é nativo.** `BiomeColors.WATER_COLOR_RESOLVER` alimenta o
+`BlockTintCache`, que mistura a cor entre biomas vizinhos — exatamente o "colormap adaptativo
+por bioma" que a planilha pede. Isso existe desde a 1.13. A planilha descreve "cores de água
+rígidas", que era a realidade do Java **pré-1.13** — e é justamente por isso que o
+BedrockWaters, citado no GDD como referência, existia.
+
+**A transição suave de neblina também já é nativa.** `AtmosphericFogEnvironment` usa
+`Mth.clampedLerp` e mantém um `rainFogMultiplier` suavizado ao longo do tempo, em vez de
+trocar de valor de golpe.
+
+**A arquitetura de névoa foi reescrita.** `BackgroundRenderer`, a classe que a planilha manda
+alterar, não existe mais. No lugar há um pacote `renderer/fog/` com um `FogEnvironment` por
+condição (atmosférica, lava, cegueira, escuridão, efeito de poção). O
+`BiomeSpecialEffects` nem carrega mais `fogColor` / `waterFogColor`.
+
+**O que sobra de UI-08** não é uma funcionalidade faltando, é uma diferença de gosto: a curva
+do Bedrock começa mais perto e fecha mais denso que a do Java. É só isso que o
+`FogRendererMixin` faz, e por ser preferência — e por mexer na renderização do mundo — vem
+desligado por padrão.

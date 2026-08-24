@@ -5,6 +5,8 @@
 	"client": [
 		"AbstractButtonMixin",
 		"AbstractWidgetAccessor",
+		"ButtonSoundMixin",
+		"FogRendererMixin",
 		"GenericMessageScreenMixin",
 		"LevelLoadingScreenMixin",
 		"PlayerSkinWidgetAccessor",

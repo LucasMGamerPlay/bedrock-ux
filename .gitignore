@@ -47,3 +47,9 @@ local.properties
 # ficam so na maquina
 
 Fotos de Menus direto do Minecraft Bedrock Como exemplo/*.png
+
+# gravacoes de teste e gifs de referencia: uteis para trabalhar, grandes demais
+# para versionar (mais de 160 MB somados)
+
+Testes em gif ou imagen/
+*.gif

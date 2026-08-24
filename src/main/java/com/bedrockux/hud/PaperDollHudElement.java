@@ -35,6 +35,9 @@ public final class PaperDollHudElement implements HudElement {
 	/** {@code bodyRot} 180 deixa a entidade de frente para quem olha — a vista do Bedrock. */
 	private static final float FRONT_FACING = 180.0F;
 
+	/** Altura do modelo em pe. Voando a caixa delimitadora encolhe, o modelo nao. */
+	private static final float STANDING_HEIGHT = 1.8F;
+
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor context, DeltaTracker deltaTracker) {
 		BedrockUXConfig.PaperDoll config = BedrockUX.config().paperDoll;
@@ -65,22 +68,44 @@ public final class PaperDollHudElement implements HudElement {
 			return;
 		}
 
-		orientTowardsCamera(living, player, partialTick, config);
+		boolean horizontal = isHorizontalPose(living);
+		orientTowardsCamera(living, player, partialTick, config, horizontal);
 
 		if (config.uprightWhileFlying) {
 			keepUpright(living);
+			horizontal = false;
+		} else if (horizontal) {
+			dampFlyingPitch(living, config);
 		}
 
 		normalizeScale(living);
 
+		// Deitado, o modelo ocupa no comprimento o que ocupava na altura, e as asas da elytra
+		// abrem ainda mais. A caixa e um recorte real, entao ela precisa alargar — senao o
+		// boneco sai cortado, que era o bug. A altura fica igual de proposito: mudar tambem
+		// a altura faria a caixa de coordenadas pular de lugar toda vez que o jogador voasse.
+		int boxWidth = horizontal ? Math.round(config.width * config.flyingWidthMultiplier) : config.width;
+		float tilt = horizontal ? config.flyingTiltDegrees : config.tiltDegrees;
+
 		int x0 = config.offsetX;
 		int y0 = config.offsetY;
-		int x1 = x0 + config.width;
+		int x1 = x0 + boxWidth;
 		int y1 = y0 + config.height;
 
-		Quaternionf cameraAngle = new Quaternionf().rotateX(config.tiltDegrees * Mth.DEG_TO_RAD);
+		Quaternionf cameraAngle = new Quaternionf().rotateX(tilt * Mth.DEG_TO_RAD);
 		Quaternionf rotation = new Quaternionf().rotateZ((float) Math.PI).mul(cameraAngle);
-		Vector3f translation = new Vector3f(0.0F, living.boundingBoxHeight / 2.0F, 0.0F);
+		// O modelo gira em torno dos pes, nao do centro. Para o boneco girar no lugar — e nao
+		// pendurado pelos pes — a translacao precisa acompanhar a inclinacao: o centro do
+		// corpo sobe e desce com o cosseno do angulo aplicado. Em pe (0 graus) isso da meia
+		// altura, que e o valor de sempre; deitado (90 graus) da zero, porque ai o centro
+		// esta na mesma altura dos pes.
+		//
+		// A altura vem do modelo, nao da caixa delimitadora: voando ela encolhe de 1.8 para
+		// 0.6, e centralizar por ela cortava a cabeca e as asas no topo.
+		float pivotHeight = Math.max(living.boundingBoxHeight, STANDING_HEIGHT);
+		float appliedPitch = horizontal ? config.flyingPitchScale * (-90.0F - living.xRot) : 0.0F;
+		float pivotY = pivotHeight / 2.0F * Mth.cos(appliedPitch * Mth.DEG_TO_RAD);
+		Vector3f translation = new Vector3f(0.0F, pivotY, 0.0F);
 
 		context.entity(living, config.scale, translation, rotation, cameraAngle, x0, y0, x1, y1);
 
@@ -110,7 +135,7 @@ public final class PaperDollHudElement implements HudElement {
 	 * pequena isso vira uma mancha, entao ele e limitado.
 	 */
 	private static void orientTowardsCamera(LivingEntityRenderState living, LocalPlayer player,
-			float partialTick, BedrockUXConfig.PaperDoll config) {
+			float partialTick, BedrockUXConfig.PaperDoll config, boolean horizontal) {
 		float headYaw = Mth.rotLerp(partialTick, player.yHeadRotO, player.yHeadRot);
 		float relativeBodyYaw = Mth.wrapDegrees(living.bodyRot - headYaw);
 
@@ -119,7 +144,13 @@ public final class PaperDollHudElement implements HudElement {
 		// o lado oposto. A subtracao tambem espelha o offset corpo/cabeca, que e o que se ve
 		// de uma camera posicionada na frente do jogador.
 		living.bodyRot = FRONT_FACING - (config.yawOffsetDegrees + relativeBodyYaw);
-		living.xRot = Mth.clamp(living.xRot, -config.headPitchLimit, config.headPitchLimit);
+
+		// O limite de pitch existe para a cabeca nao deitar quando o boneco esta em pe.
+		// Durante o voo o mesmo xRot comanda a inclinacao do corpo inteiro, e limitar aqui
+		// impedia o boneco de virar para baixo ao mergulhar.
+		if (!horizontal) {
+			living.xRot = Mth.clamp(living.xRot, -config.headPitchLimit, config.headPitchLimit);
+		}
 	}
 
 	/**
@@ -131,6 +162,43 @@ public final class PaperDollHudElement implements HudElement {
 	 * modelo deitado nao cabe e sai cortado. Neutralizar as flags e mais barato e mais
 	 * estavel do que tentar reenquadrar a caixa a cada pose.
 	 */
+	/**
+	 * Amortece o mergulho sem perder a pose de voo.
+	 *
+	 * <p>Na tela cheia o vanilla deita o corpo ate 90 graus, o que faz sentido em terceira
+	 * pessoa mas aponta o personagem para a camera numa miniatura — vira uma mancha. O
+	 * Bedrock mantem a vista de frente e so inclina de leve, com as asas abertas.
+	 *
+	 * <p>O corte e feito na origem do angulo, nao na camera: o
+	 * {@code AvatarRenderer} calcula a inclinacao como
+	 * {@code fallFlyingScale() * (-90 - xRot)}, e {@code fallFlyingScale()} vale
+	 * {@code clamp(t² / 100, 0, 1)}. Reescrevendo {@code t} para {@code 10 * sqrt(fator)}
+	 * obtem-se exatamente a fracao desejada da inclinacao, e a pose das asas — que depende
+	 * de {@code isFallFlying}, nao do angulo — fica intacta.
+	 */
+	private static void dampFlyingPitch(LivingEntityRenderState living, BedrockUXConfig.PaperDoll config) {
+		float factor = Mth.clamp(config.flyingPitchScale, 0.0F, 1.0F);
+
+		if (living instanceof AvatarRenderState avatar) {
+			avatar.fallFlyingTimeInTicks = 10.0F * Mth.sqrt(factor);
+		}
+
+		// Nado e tridente usam a mesma ideia, mas a intensidade vem do swimAmount.
+		if (living instanceof HumanoidRenderState humanoid) {
+			humanoid.swimAmount *= factor;
+		}
+	}
+
+	/** Poses em que o vanilla deita o modelo: elytra, nado e tridente. */
+	private static boolean isHorizontalPose(LivingEntityRenderState living) {
+		if (living.isAutoSpinAttack) {
+			return true;
+		}
+
+		return living instanceof HumanoidRenderState humanoid
+				&& (humanoid.isFallFlying || humanoid.isVisuallySwimming || humanoid.swimAmount > 0.0F);
+	}
+
 	private static void keepUpright(LivingEntityRenderState living) {
 		living.isAutoSpinAttack = false;
 
