@@ -1,0 +1,121 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+base {
+	archivesName = project.archives_base_name
+}
+
+// Caminhos da maquina ficam em `local.properties`, que nao vai para o repositorio.
+// Veja `local.properties.example`.
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+
+if (localPropertiesFile.exists()) {
+	localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+
+loom {
+	// No Windows, manda o JVM do jogo usar a loja de certificados do sistema em vez do
+	// cacerts do Java. E o que faz o runClient funcionar atras de antivirus que interceptam
+	// TLS (AVG, Kaspersky, ESET) — sem isso a autenticacao da Mojang falha com PKIX. Fora do
+	// Windows esse tipo de trust store nao existe e declara-lo quebraria toda a TLS.
+	if (System.getProperty('os.name', '').toLowerCase().contains('windows')) {
+		runs.configureEach {
+			systemProperties.put('javax.net.ssl.trustStoreType', 'Windows-ROOT')
+		}
+	}
+
+	runs {
+		client {
+			// Atalho de iteracao: `gradlew runClient -PquickPlay="Novo mundo"` entra direto
+			// no mundo, sem passar pelos menus. Sem a propriedade, nada muda.
+			if (project.hasProperty('quickPlay')) {
+				programArgs '--quickPlaySingleplayer', project.property('quickPlay').toString()
+			}
+		}
+	}
+}
+
+repositories {
+	// Repositorios extras (para dependencias de outros mods) entram aqui.
+	// O Loom ja adiciona sozinho os repositorios do Minecraft e do Fabric.
+}
+
+dependencies {
+	// As versoes ficam no gradle.properties.
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+	it.options.encoding = 'UTF-8'
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+	def projectName = project.name
+	inputs.property "projectName", projectName
+}
+
+// Copia o jar final direto para a pasta `mods` do perfil de teste do Modrinth.
+// Uso: gradlew deployToProfile
+tasks.register('deployToProfile', Copy) {
+	group = 'bedrockux'
+	description = 'Copia o jar final para a pasta mods do perfil de teste.'
+
+	// O 26.2 nao e ofuscado, entao o Loom nao registra `remapJar`: o artefato final e o
+	// proprio `jar`. O findByName mantem a task funcionando se isso voltar a mudar.
+	def modJar = tasks.findByName('remapJar') ?: tasks.named('jar').get()
+	dependsOn modJar
+
+	def configuredProfileDir = localProperties.getProperty('test_profile_dir')
+	def modsDir = configuredProfileDir ? new File(file(configuredProfileDir), 'mods') : null
+
+	from modJar
+	// O Copy exige um destino valido ja na configuracao, e a task e realizada por
+	// `gradlew tasks` e pela sincronizacao da IDE. Por isso o destino cai num placeholder
+	// quando nao ha perfil configurado, e o erro util sai no doFirst — antes de copiar nada.
+	into modsDir ?: layout.buildDirectory.dir('deploy-sem-perfil')
+
+	doFirst {
+		if (modsDir == null) {
+			throw new GradleException(
+					'Defina `test_profile_dir` em local.properties (copie local.properties.example).')
+		}
+
+		if (!modsDir.parentFile.exists()) {
+			throw new GradleException("Perfil de teste nao encontrado: ${modsDir.parentFile}. Ajuste `test_profile_dir` em local.properties.")
+		}
+
+		modsDir.mkdirs()
+		// Remove builds anteriores do mod para nao carregar duas versoes ao mesmo tempo.
+		modsDir.listFiles()?.each { f ->
+			if (f.name.startsWith("${project.archives_base_name}-") && f.name.endsWith('.jar')) {
+				logger.lifecycle("Removendo build anterior: ${f.name}")
+				f.delete()
+			}
+		}
+	}
+
+	doLast {
+		logger.lifecycle("Mod instalado em: ${modsDir}")
+	}
+}

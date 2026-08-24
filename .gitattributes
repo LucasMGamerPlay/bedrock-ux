@@ -1,0 +1,17 @@
+#
+# https://help.github.com/articles/dealing-with-line-endings/
+#
+# Normaliza as quebras de linha no repositorio, independente do autocrlf de cada maquina.
+* text=auto
+
+# Linux start script should use lf
+/gradlew        text eol=lf
+
+# These are Windows script files and should use crlf
+*.bat           text eol=crlf
+
+# Documentos de design e binarios do wrapper
+*.pdf           binary
+*.xlsx          binary
+*.jar           binary
+*.png           binary

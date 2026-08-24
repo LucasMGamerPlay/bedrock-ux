@@ -1,0 +1,6 @@
+# Copie para `local.properties` e ajuste. Esse arquivo e ignorado pelo git porque
+# guarda caminhos da sua maquina.
+
+# Pasta do perfil usado para testar o mod (a task `deployToProfile` copia o jar
+# para a subpasta `mods` dela). Use barras normais, inclusive no Windows.
+test_profile_dir=C:/Users/voce/AppData/Roaming/ModrinthApp/profiles/seu-perfil

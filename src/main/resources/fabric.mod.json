@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "bedrockux",
+	"version": "${version}",
+	"name": "Bedrock UX",
+	"description": "Paridade visual da GUI/UX do Minecraft Bedrock para a Java Edition. Mod client-side.",
+	"authors": [
+		"Lucas"
+	],
+	"license": "MIT",
+	"icon": "assets/bedrockux/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.bedrockux.BedrockUXClient"
+		]
+	},
+	"mixins": [
+		{
+			"config": "bedrockux.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

@@ -1,0 +1,18 @@
+{
+	"key.category.bedrockux.main": "Bedrock UX",
+	"key.bedrockux.toggle_coordinates": "Alternar HUD de coordenadas",
+	"key.bedrockux.toggle_paper_doll": "Alternar boneco 3D",
+	"key.bedrockux.reload_config": "Recarregar configuração",
+	"text.bedrockux.coordinates.position": "Posição",
+	"text.bedrockux.coordinates.facing": "Direção",
+	"text.bedrockux.coordinates.biome": "Bioma",
+	"text.bedrockux.coordinates.enabled": "Coordenadas: ligadas",
+	"text.bedrockux.coordinates.disabled": "Coordenadas: desligadas",
+	"text.bedrockux.paper_doll.enabled": "Boneco 3D: ligado",
+	"text.bedrockux.paper_doll.disabled": "Boneco 3D: desligado",
+	"text.bedrockux.config_reloaded": "Bedrock UX: configuração recarregada",
+	"text.bedrockux.direction.north": "Norte",
+	"text.bedrockux.direction.south": "Sul",
+	"text.bedrockux.direction.east": "Leste",
+	"text.bedrockux.direction.west": "Oeste"
+}

@@ -1,0 +1,18 @@
+{
+	"key.category.bedrockux.main": "Bedrock UX",
+	"key.bedrockux.toggle_coordinates": "Toggle coordinates HUD",
+	"key.bedrockux.toggle_paper_doll": "Toggle paper doll",
+	"key.bedrockux.reload_config": "Reload config",
+	"text.bedrockux.coordinates.position": "Position",
+	"text.bedrockux.coordinates.facing": "Facing",
+	"text.bedrockux.coordinates.biome": "Biome",
+	"text.bedrockux.coordinates.enabled": "Coordinates: on",
+	"text.bedrockux.coordinates.disabled": "Coordinates: off",
+	"text.bedrockux.paper_doll.enabled": "Paper doll: on",
+	"text.bedrockux.paper_doll.disabled": "Paper doll: off",
+	"text.bedrockux.config_reloaded": "Bedrock UX: config reloaded",
+	"text.bedrockux.direction.north": "North",
+	"text.bedrockux.direction.south": "South",
+	"text.bedrockux.direction.east": "East",
+	"text.bedrockux.direction.west": "West"
+}
