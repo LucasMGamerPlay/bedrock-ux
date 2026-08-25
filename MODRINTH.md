@@ -1,7 +1,104 @@
 <!--
   Corpo da página do Modrinth. Colar no campo "Description" do projeto.
   Não faz parte do mod — é material de publicação.
+
+  Bilíngue: o Modrinth aceita um único corpo de descrição, então o inglês vem
+  primeiro (público maior) e o português logo abaixo.
 -->
+
+**English** · [Português](#português)
+
+# Bedrock UX
+
+**The Minecraft Bedrock interface, on Java Edition.**
+
+A **client-side** mod: it does not need to be on the server, and works on any server
+unchanged. No new content, no gameplay advantage — just the GUI.
+
+## What it does
+
+### On the HUD
+
+- **Paper Doll** — the player model in the corner of the screen, facing you, with the body
+  turning to follow your direction of movement. It goes horizontal when you fly with an
+  elytra, pivoting around the middle of the body like Bedrock does.
+- **Coordinates** in Bedrock's format, right below the model.
+
+### On the screens
+
+- **Main menu** with a single centered column, icon buttons in the bottom-left corner, and
+  the 3D player model with the name above it. **The head follows your cursor independently
+  of the body.**
+- **Pause menu** with the buttons pushed to the left corner, the logo above them, and the
+  player model on the right.
+- **Inventory** with Bedrock's panel, slots, and crafting arrow.
+- **Screen transitions** and a **loading screen** with Bedrock's panel and animated saving
+  icon.
+- **Button click sounds.**
+
+Every color was sampled pixel by pixel from Bedrock screenshots, not eyeballed.
+
+## ⚠️ Warning: shader packs (Iris)
+
+**With a shader pack active, the 3D player model on the main menu renders distorted.** The
+mod detects this and swaps the model for a **2D face from your skin**, with a blink.
+
+This is a **workaround, not a fix** — the cause is outside the mod's reach. The menu model
+is not drawn as regular GUI: it goes through the *entity* rendering path, which the shader
+pack replaces and which expects world data (camera, lighting, normals). There is no world
+on the title screen, so the shader transforms the vertices using data that was never
+filled in.
+
+Two side effects of this that tend to confuse people:
+
+- **Entering a world and coming back "fixes" it** — by then Iris has valid state cached.
+- **The HUD Paper Doll never suffers from this**, because it runs inside a world.
+
+The rest of the screens are unaffected: they are plain GUI drawing, which the shader does
+not replace.
+
+If you would rather see the 3D model even with a shader active, turn off
+`titleScreen.hideModelWithShaders` in the config.
+
+## Requirements
+
+| | |
+|---|---|
+| Minecraft | 26.2 |
+| Fabric Loader | 0.19.3 or newer |
+| Fabric API | required |
+| Java | **25** |
+
+> **Java 25 is not optional.** It is what Minecraft 26.2 itself requires.
+
+## Configuration
+
+Everything is adjustable in `config/bedrockux.json`, created on first launch. **Each
+feature can be turned off individually** through its section's `enabled` flag — you can run
+just the Paper Doll, or just the screens, without taking the rest.
+
+## Compatibility
+
+- **Servers:** any. The mod is client-side only.
+- **Iris / shader packs:** works, with the main-menu model caveat described above.
+- **Sodium:** the screens and the HUD work. The optional fog tweak (off by default) has not
+  been validated with Sodium yet.
+
+## Not in scope yet
+
+The creative inventory, and the fog tweak that is still unvalidated. Water and chat margins
+were dropped from the plan because modern Java already handles both natively.
+
+## Source
+
+[GitHub](https://github.com/LucasMGamerPlay/bedrock-ux) · MIT license · Bug reports on
+[Issues](https://github.com/LucasMGamerPlay/bedrock-ux/issues).
+
+---
+
+<a name="português"></a>
+
+[English](#bedrock-ux) · **Português**
 
 # Bedrock UX
 

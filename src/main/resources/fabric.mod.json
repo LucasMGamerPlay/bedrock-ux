@@ -3,7 +3,7 @@
 	"id": "bedrockux",
 	"version": "${version}",
 	"name": "Bedrock UX",
-	"description": "Paridade visual da GUI/UX do Minecraft Bedrock para a Java Edition. Mod client-side.",
+	"description": "Bedrock Edition's GUI/UX on Java Edition. Client-side. / Paridade visual da GUI/UX do Minecraft Bedrock para a Java Edition. Mod client-side.",
 	"authors": [
 		"Lucas"
 	],
