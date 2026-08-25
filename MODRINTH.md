@@ -19,7 +19,10 @@
     Cliente ............. required
     Servidor ............ unsupported
     Licença ............. MIT
-    Ícone ............... Bedrock_UX_logo.png (512x512)
+    Ícone ............... Bedrock_UX_icon_512.jpg (512x512, 105 KiB)
+                          O limite do Modrinth e 256 KiB. O PNG de 512
+                          da 582 KiB e estoura; JPEG q92 cabe sem perda
+                          visivel. PNG indexado tambem cabe, mas bandeia.
     Source / Issues ..... https://github.com/LucasMGamerPlay/bedrock-ux
   ------------------------------------------------------------------------
 -->
