@@ -6,12 +6,15 @@
 		"AbstractButtonMixin",
 		"AbstractWidgetAccessor",
 		"ButtonSoundMixin",
+		"ContainerScreenAccessor",
 		"FogRendererMixin",
 		"GenericMessageScreenMixin",
+		"InventoryScreenMixin",
 		"LevelLoadingScreenMixin",
 		"PauseScreenMixin",
 		"PlayerSkinWidgetAccessor",
 		"ScreenTransitionMixin",
+		"SlotAccessor",
 		"TitleScreenMixin"
 	],
 	"injectors": {

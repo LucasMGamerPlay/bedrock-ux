@@ -30,6 +30,14 @@ public final class BedrockTheme {
 	public static final int PANEL_INNER_FILL = 0xCC0A0909;
 	public static final int PANEL_INNER_TEXT = 0xFFFFFFFF;
 
+	// Slots de inventario, amostrados de inventario sobrevivencia (1).jpg.
+	private static final int SLOT_FILL = 0xFF8B8B8B;
+	private static final int SLOT_SHADOW = 0xFF363636;
+	private static final int SLOT_HIGHLIGHT = 0xFFFFFFFF;
+
+	/** Caixa escura atras do modelo do jogador no inventario. */
+	public static final int MODEL_BOX = 0xFF000000;
+
 	// Barra de progresso: segmentos verdes, nao um preenchimento continuo.
 	private static final int BAR_SEGMENT_FILLED = 0xFF96D464;
 	private static final int BAR_SEGMENT_FILLED_TOP = 0xFFAEEE7A;
@@ -181,5 +189,45 @@ public final class BedrockTheme {
 				context.fill(segmentX, y, segmentRight, y + height, BAR_SEGMENT_EMPTY);
 			}
 		}
+	}
+
+	/**
+	 * Slot no estilo Bedrock: rebaixado, com sombra em cima e a esquerda e realce embaixo e
+	 * a direita. Os slots ficam encostados, entao o realce de um toca a sombra do vizinho —
+	 * e o que da o aspecto de grade gravada do original.
+	 */
+	private static final int ARROW_FILL = 0xFFA0A0A0;
+	private static final int ARROW_SHADOW = 0xFF7C7C7C;
+
+	/**
+	 * Seta entre a grade de fabricacao e o resultado.
+	 *
+	 * <p>No vanilla ela faz parte da textura do painel. Como o painel virou desenho proprio,
+	 * a seta precisa ser redesenhada ou some junto.
+	 */
+	public static void drawCraftArrow(GuiGraphicsExtractor context, int x, int y, int length, int thickness) {
+		int shaftLength = Math.max(1, length - thickness);
+		int shaftTop = y - thickness / 2;
+
+		context.fill(x, shaftTop + 1, x + shaftLength, shaftTop + thickness + 1, ARROW_SHADOW);
+		context.fill(x, shaftTop, x + shaftLength, shaftTop + thickness, ARROW_FILL);
+
+		// Ponta: uma linha por passo, estreitando ate o bico.
+		int head = thickness + thickness / 2;
+		for (int step = 0; step < head; step++) {
+			int half = head - step;
+			int lineX = x + shaftLength + step;
+			context.fill(lineX, y - half + 1, lineX + 1, y + half + 1, ARROW_SHADOW);
+			context.fill(lineX, y - half, lineX + 1, y + half, ARROW_FILL);
+		}
+	}
+
+	public static void drawSlot(GuiGraphicsExtractor context, int x, int y, int size) {
+		int right = x + size;
+		int bottom = y + size;
+
+		context.fill(x, y, right, bottom, SLOT_HIGHLIGHT);
+		context.fill(x, y, right - 1, bottom - 1, SLOT_SHADOW);
+		context.fill(x + 1, y + 1, right - 1, bottom - 1, SLOT_FILL);
 	}
 }

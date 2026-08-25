@@ -19,6 +19,7 @@ public final class BedrockUXConfig {
 	public MessageScreen messageScreen = new MessageScreen();
 	public TitleScreen titleScreen = new TitleScreen();
 	public PauseScreen pauseScreen = new PauseScreen();
+	public Inventory inventory = new Inventory();
 
 	/** Corrige valores invalidos vindos de um arquivo editado a mao. */
 	public void sanitize() {
@@ -40,6 +41,10 @@ public final class BedrockUXConfig {
 
 		if (pauseScreen == null) {
 			pauseScreen = new PauseScreen();
+		}
+
+		if (inventory == null) {
+			inventory = new Inventory();
 		}
 
 		if (transitions == null) {
@@ -91,6 +96,8 @@ public final class BedrockUXConfig {
 
 		transitions.durationMillis = Mth.clamp(transitions.durationMillis, 0, 2000);
 		transitions.slideDistance = Mth.clamp(transitions.slideDistance, -400.0F, 400.0F);
+
+		inventory.slotPitch = Mth.clamp(inventory.slotPitch, 18, 32);
 
 		pauseScreen.menuWidthFraction = Mth.clamp(pauseScreen.menuWidthFraction, 0.2F, 0.9F);
 		pauseScreen.logoScale = Mth.clamp(pauseScreen.logoScale, 0.2F, 1.0F);
@@ -219,6 +226,16 @@ public final class BedrockUXConfig {
 		public int durationMillis = 180;
 		/** Deslocamento inicial em pixels de GUI. Negativo faz entrar pela esquerda. */
 		public float slideDistance = 24.0F;
+	}
+
+	/** Inventario com painel e slots do Bedrock no lugar da textura do vanilla. */
+	public static final class Inventory {
+		public boolean enabled = true;
+		/**
+		 * Distancia entre slots. O vanilla usa 18, com os slots colados; o Bedrock deixa
+		 * folga entre eles. O slot em si continua com 18, porque o icone do item e fixo.
+		 */
+		public int slotPitch = 19;
 	}
 
 	/** Menu de pausa: botoes a esquerda e modelo do jogador a direita. */
