@@ -47,7 +47,7 @@ public class AbstractButtonMixin {
 
 	@Inject(method = "extractDefaultSprite", at = @At("HEAD"), cancellable = true)
 	private void bedrockux$drawFlatButton(GuiGraphicsExtractor context, CallbackInfo callbackInfo) {
-		if (!BedrockUX.config().buttons.enabled || bedrockux$keepsVanillaLabel()) {
+		if (!BedrockUX.config().buttons.enabled || bedrockux$keepsVanillaSprite()) {
 			return;
 		}
 
@@ -59,14 +59,20 @@ public class AbstractButtonMixin {
 
 		BedrockTheme.drawButton(context, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(),
 				variant, alpha);
-		bedrockux$drawLabel(context, widget, variant, alpha);
+
+		// Botoes de icone desenham o proprio conteudo depois desta chamada. Escrever o
+		// rotulo deles aqui criava texto que o vanilla nunca mostra — era o que aparecia
+		// atravessado sobre a fileira de icones do menu de pausa.
+		if (!bedrockux$drawsOwnContents()) {
+			bedrockux$drawLabel(context, widget, variant, alpha);
+		}
 
 		callbackInfo.cancel();
 	}
 
 	@Inject(method = "extractDefaultLabel", at = @At("HEAD"), cancellable = true)
 	private void bedrockux$suppressVanillaLabel(ActiveTextCollector collector, CallbackInfo callbackInfo) {
-		if (BedrockUX.config().buttons.enabled && !bedrockux$keepsVanillaLabel()) {
+		if (BedrockUX.config().buttons.enabled && !bedrockux$keepsVanillaSprite()) {
 			callbackInfo.cancel();
 		}
 	}
@@ -77,8 +83,16 @@ public class AbstractButtonMixin {
 	 * de claro deixaria texto branco sobre claro, ilegivel — melhor manter o visual do
 	 * vanilla nesse caso.
 	 */
-	private boolean bedrockux$keepsVanillaLabel() {
+	private boolean bedrockux$keepsVanillaSprite() {
 		return (Object) this instanceof SpriteIconButton.TextAndIcon;
+	}
+
+	/**
+	 * Botoes de icone montam o proprio conteudo em {@code extractContents}, depois do fundo.
+	 * O rotulo deles existe para narracao e dica de tela, e o vanilla nunca o desenha.
+	 */
+	private boolean bedrockux$drawsOwnContents() {
+		return (Object) this instanceof SpriteIconButton;
 	}
 
 	private static BedrockTheme.ButtonVariant bedrockux$baseVariant(Component message) {

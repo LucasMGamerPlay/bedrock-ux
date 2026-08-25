@@ -375,6 +375,11 @@ A exceção é `SpriteIconButton.TextAndIcon`, que desenha o próprio texto fora
 `extractDefaultLabel` — como não dá para recolori-lo, esses botões mantêm o visual do
 vanilla em vez de virarem texto branco sobre fundo claro.
 
+**Botões de ícone não recebem rótulo.** `SpriteIconButton` monta o próprio conteúdo em
+`extractContents`, depois do fundo, e o vanilla nunca desenha o `getMessage()` deles — ele
+existe para narração e dica de tela. Desenhá-lo junto com o fundo criava texto atravessado
+sobre a fileira de ícones do menu de pausa.
+
 **Variantes semânticas** são mapeadas por chave de tradução (não por texto, para valer em
 qualquer idioma) em `AbstractButtonMixin`. O Java não tem noção de "ação primária", então a
 lista é manual e cresce conforme as telas forem cobertas: hoje cobre `selectWorld.create`,
