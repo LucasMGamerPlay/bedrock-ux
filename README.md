@@ -624,3 +624,22 @@ conhece). Sobrepor em espaço de tela também não serve: a cabeça gira seguind
 acompanha o corpo, então a pálpebra sairia do lugar.
 
 No rosto 2D o mod controla o `blit`, então o recorte é exato.
+
+## Menu de pausa
+
+Mesma abordagem do menu principal: reposiciona o que o vanilla criou, sem remontar a tela.
+Aqui o **arranjo é preservado** — o botão largo em cima, os pares lado a lado, os ícones no
+meio — e o bloco inteiro recebe o mesmo deslocamento para a esquerda. Reposicionar botão a
+botão mudaria o desenho da tela, que não é o objetivo.
+
+O logo é desenhado com `blit` próprio em vez do `LogoRenderer`, que só sabe o tamanho fixo
+de 256×44 — grande demais para dividir a tela com os botões. `logoScale` controla o
+tamanho.
+
+O título "Menu do jogo" é um `StringWidget` centralizado no topo, que ficava atravessado
+sobre o logo. Ele é escondido (`visible = false`), não removido, para a narração de
+acessibilidade continuar funcionando.
+
+O modelo do jogador usa `PlayerModelPreview`, a mesma classe do menu principal — reset de
+pose por frame, giro dividido entre corpo e cabeça e o yaw da cabeça negado. Antes essa
+lógica vivia só no `TitleScreenMixin`; foi extraída para não existir em duas cópias.

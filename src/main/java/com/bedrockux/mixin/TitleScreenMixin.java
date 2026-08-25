@@ -2,6 +2,7 @@ package com.bedrockux.mixin;
 
 import com.bedrockux.BedrockUX;
 import com.bedrockux.config.BedrockUXConfig;
+import com.bedrockux.ui.PlayerModelPreview;
 import com.bedrockux.ui.ShaderCompat;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -317,124 +318,9 @@ public abstract class TitleScreenMixin extends Screen {
 			return;
 		}
 
-		PlayerSkinWidgetAccessor accessor = (PlayerSkinWidgetAccessor) model;
-		bedrockux$resetModelPose(accessor);
-
-		if (BedrockUX.config().titleScreen.modelFollowsMouse) {
-			bedrockux$applyMouseRotation(accessor, model, mouseX, mouseY, BedrockUX.config().titleScreen);
-		}
-	}
-
-	/**
-	 * Devolve as partes do modelo a pose original antes de cada frame.
-	 *
-	 * <p>{@code Model.Simple} nao anima nada — o {@code setupAnim} dele e vazio —, entao as
-	 * partes ficam com a ultima transformacao que alguem tiver deixado nelas. Num jogo com
-	 * mods que substituem modelos de entidade, isso aparece como um boneco torto na tela
-	 * inicial que se conserta sozinho depois de entrar num mundo, porque aí o vanilla anima
-	 * as partes e as deixa em valores sensatos.
-	 */
-	private static void bedrockux$resetModelPose(PlayerSkinWidgetAccessor accessor) {
-		bedrockux$resetParts(accessor.bedrockux$getWideModel());
-		bedrockux$resetParts(accessor.bedrockux$getSlimModel());
-	}
-
-	private static void bedrockux$resetParts(Model.Simple model) {
-		if (model == null) {
-			return;
-		}
-
-		for (ModelPart part : model.root().getAllParts()) {
-			part.resetPose();
-		}
-	}
-
-	/**
-	 * Divide o giro entre corpo e cabeca, como uma pessoa olhando de lado.
-	 *
-	 * <p>O widget do vanilla so sabe girar o modelo inteiro. A cabeca ganha movimento
-	 * proprio girando a {@code ModelPart} dela diretamente, com o restante do angulo que o
-	 * corpo nao absorveu — por isso ela sempre acaba apontada para o cursor, independente de
-	 * quanto o corpo acompanhou.
-	 *
-	 * <p>Precisa rodar depois do {@code resetPose}, que apaga qualquer rotacao anterior.
-	 */
-	private void bedrockux$applyMouseRotation(PlayerSkinWidgetAccessor accessor, PlayerSkinWidget model,
-			int mouseX, int mouseY, BedrockUXConfig.TitleScreen config) {
-		// Antes de init, ou durante um redimensionamento, a tela pode ter dimensao zero: a
-		// divisao viraria NaN e o quaternion levaria o modelo a geometria invalida.
-		if (this.width <= 0 || this.height <= 0) {
-			return;
-		}
-
-		float centerX = model.getX() + model.getWidth() / 2.0F;
-		float centerY = model.getY() + model.getHeight() / 2.0F;
-
-		// Normaliza por lado, nao por metade de tela. O modelo fica a 82% da largura e abaixo
-		// do centro, entao dividir pela metade da tela dava curso longo de um lado e curto do
-		// outro: o boneco encarava a esquerda mas mal virava para a direita.
-		float yaw = bedrockux$normalizedOffset(mouseX, centerX, this.width) * FOLLOW_YAW_LIMIT;
-		float pitch = bedrockux$normalizedOffset(mouseY, centerY, this.height) * FOLLOW_PITCH_LIMIT;
-
-		if (!Float.isFinite(yaw) || !Float.isFinite(pitch)) {
-			return;
-		}
-
-		float bodyShare = Mth.clamp(config.bodyFollowFactor, 0.0F, 1.0F);
-		float bodyYaw = yaw * bodyShare;
-		float bodyPitch = pitch * bodyShare;
-
-		accessor.bedrockux$setRotationY(bodyYaw);
-		accessor.bedrockux$setRotationX(-bodyPitch);
-
-		// O yaw da cabeca entra negado, o do corpo nao. O modelo e exibido de frente, ou seja,
-		// girado 180 graus em relacao ao proprio "para frente": um giro aplicado no espaco do
-		// modelo aparece espelhado na tela. O pitch nao sofre disso, porque o eixo de
-		// inclinacao nao muda de sentido com esse giro.
-		float headYaw = -(yaw - bodyYaw);
-		float headPitch = pitch - bodyPitch;
-
-		bedrockux$rotateHead(accessor.bedrockux$getWideModel(), headYaw, headPitch);
-		bedrockux$rotateHead(accessor.bedrockux$getSlimModel(), headYaw, headPitch);
-	}
-
-	/**
-	 * Posicao do cursor em relacao ao modelo, de -1 a 1, medindo cada lado pelo espaco que
-	 * realmente existe ali. Assim o giro chega ao maximo nos dois sentidos mesmo com o
-	 * modelo fora do centro da tela.
-	 */
-	private static float bedrockux$normalizedOffset(float value, float center, float extent) {
-		float delta = value - center;
-		float available = delta < 0.0F ? center : extent - center;
-
-		if (available <= 0.0F) {
-			return 0.0F;
-		}
-
-		return Mth.clamp(delta / available, -1.0F, 1.0F);
-	}
-
-	/** Gira a cabeca e, junto, a camada de chapeu, esteja ela sob a cabeca ou irma dela. */
-	private static void bedrockux$rotateHead(Model.Simple model, float yawDegrees, float pitchDegrees) {
-		if (model == null) {
-			return;
-		}
-
-		ModelPart root = model.root();
-
-		if (!root.hasChild(PartNames.HEAD)) {
-			return;
-		}
-
-		ModelPart head = root.getChild(PartNames.HEAD);
-		head.yRot = yawDegrees * Mth.DEG_TO_RAD;
-		head.xRot = pitchDegrees * Mth.DEG_TO_RAD;
-
-		if (root.hasChild(PartNames.HAT)) {
-			ModelPart hat = root.getChild(PartNames.HAT);
-			hat.yRot = head.yRot;
-			hat.xRot = head.xRot;
-		}
+		BedrockUXConfig.TitleScreen config = BedrockUX.config().titleScreen;
+		PlayerModelPreview.update(model, this.width, this.height, mouseX, mouseY,
+				config.modelFollowsMouse, config.bodyFollowFactor);
 	}
 
 	/** Prepara o rosto em 2D no lugar do modelo, mantendo o nome acima dele. */

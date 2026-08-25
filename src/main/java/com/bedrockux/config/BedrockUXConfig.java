@@ -18,6 +18,7 @@ public final class BedrockUXConfig {
 	public LoadingScreen loadingScreen = new LoadingScreen();
 	public MessageScreen messageScreen = new MessageScreen();
 	public TitleScreen titleScreen = new TitleScreen();
+	public PauseScreen pauseScreen = new PauseScreen();
 
 	/** Corrige valores invalidos vindos de um arquivo editado a mao. */
 	public void sanitize() {
@@ -35,6 +36,10 @@ public final class BedrockUXConfig {
 
 		if (titleScreen == null) {
 			titleScreen = new TitleScreen();
+		}
+
+		if (pauseScreen == null) {
+			pauseScreen = new PauseScreen();
 		}
 
 		if (transitions == null) {
@@ -86,6 +91,12 @@ public final class BedrockUXConfig {
 
 		transitions.durationMillis = Mth.clamp(transitions.durationMillis, 0, 2000);
 		transitions.slideDistance = Mth.clamp(transitions.slideDistance, -400.0F, 400.0F);
+
+		pauseScreen.menuWidthFraction = Mth.clamp(pauseScreen.menuWidthFraction, 0.2F, 0.9F);
+		pauseScreen.logoScale = Mth.clamp(pauseScreen.logoScale, 0.2F, 1.0F);
+		pauseScreen.bodyFollowFactor = Mth.clamp(pauseScreen.bodyFollowFactor, 0.0F, 1.0F);
+		pauseScreen.modelHeightFraction = Mth.clamp(pauseScreen.modelHeightFraction, 0.1F, 1.0F);
+		pauseScreen.maxModelHeight = Mth.clamp(pauseScreen.maxModelHeight, 20, 600);
 
 		titleScreen.columns = Mth.clamp(titleScreen.columns, 1, 4);
 		titleScreen.buttonWidth = Mth.clamp(titleScreen.buttonWidth, 40, 400);
@@ -208,6 +219,23 @@ public final class BedrockUXConfig {
 		public int durationMillis = 180;
 		/** Deslocamento inicial em pixels de GUI. Negativo faz entrar pela esquerda. */
 		public float slideDistance = 24.0F;
+	}
+
+	/** Menu de pausa: botoes a esquerda e modelo do jogador a direita. */
+	public static final class PauseScreen {
+		public boolean enabled = true;
+		public boolean showPlayerModel = true;
+		/** Logo acima do bloco de botoes, como no Bedrock. */
+		public boolean showLogo = true;
+		/** Escala do logo. O tamanho cheio do vanilla nao cabe ao lado do modelo. */
+		public float logoScale = 0.55F;
+		public boolean modelFollowsMouse = true;
+		/** Quanto do giro o corpo absorve; o resto vai para a cabeca. */
+		public float bodyFollowFactor = 0.35F;
+		/** Fracao da largura reservada aos botoes; o resto fica com o modelo. */
+		public float menuWidthFraction = 0.42F;
+		public float modelHeightFraction = 0.6F;
+		public int maxModelHeight = 190;
 	}
 
 	/** UI-04: menu principal com botoes em grade e o modelo do jogador a direita. */

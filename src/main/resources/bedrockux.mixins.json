@@ -9,6 +9,7 @@
 		"FogRendererMixin",
 		"GenericMessageScreenMixin",
 		"LevelLoadingScreenMixin",
+		"PauseScreenMixin",
 		"PlayerSkinWidgetAccessor",
 		"ScreenTransitionMixin",
 		"TitleScreenMixin"
