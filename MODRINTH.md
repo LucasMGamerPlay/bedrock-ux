@@ -5,26 +5,7 @@
   Bilíngue: o Modrinth aceita um único corpo de descrição, então o inglês vem
   primeiro (público maior) e o português logo abaixo.
 
-  ------------------------------------------------------------------------
-  Campo "Summary" do projeto (texto puro, sem Markdown, limite 256 chars):
-
-  Bedrock Edition's GUI on Java: Paper Doll, Bedrock-style main menu, pause
-  menu, inventory, loading screens and UI sounds. Client-side, works on any
-  server.
-
-  (155 caracteres — colar em UMA linha só.)
-
-  Resto do formulário:
-    Categorias .......... Decoration, Utility
-    Cliente ............. required
-    Servidor ............ unsupported
-    Licença ............. MIT
-    Ícone ............... Bedrock_UX_icon_512.jpg (512x512, 105 KiB)
-                          O limite do Modrinth e 256 KiB. O PNG de 512
-                          da 582 KiB e estoura; JPEG q92 cabe sem perda
-                          visivel. PNG indexado tambem cabe, mas bandeia.
-    Source / Issues ..... https://github.com/LucasMGamerPlay/bedrock-ux
-  ------------------------------------------------------------------------
+  O restante do formulario (Summary, categorias, icone) esta em PUBLICACAO.md.
 -->
 
 **English** · [Português](#português)
