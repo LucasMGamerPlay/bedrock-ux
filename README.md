@@ -1,7 +1,31 @@
+<p align="center">
+  <img src="Bedrock_UX_logo.png" alt="Bedrock UX" width="256">
+</p>
+
 # Bedrock UX
 
 Mod **client-side** para Minecraft Java Edition (Fabric) que traz a GUI/UX da edição Bedrock.
 Documentos de origem: `Documento_Design_Bedrock_UX.pdf` (GDD) e `Planejamento_Mod_BedrockUI.xlsx` (escopo).
+
+> ### ⚠️ Aviso: shader packs (Iris) e o modelo da tela inicial
+>
+> **Com um shader pack ativo, o modelo 3D do jogador no menu principal aparece
+> deformado.** O mod detecta isso e, por padrão, troca o modelo pelo **rosto da skin em
+> 2D** (com piscada), que não passa pelo caminho quebrado.
+>
+> **Isso é um contorno, não um conserto.** A causa está fora do alcance do mod: o modelo
+> não é desenhado como GUI comum — ele passa pelo caminho de renderização de *entidades*,
+> que o shader pack substitui e que espera dados de mundo (câmera, luz, normais). Na tela
+> inicial não existe mundo, então o shader transforma os vértices com dados nunca
+> preenchidos. Por isso **entrar num mundo e voltar "conserta"** — aí o Iris já tem estado
+> válido em cache.
+>
+> O que **não** é afetado: a Paper Doll no HUD (roda dentro de um mundo, onde os dados
+> existem) e todo o resto das telas, que é desenho de GUI comum.
+>
+> Para ver o modelo 3D mesmo com shader ativo — deformado, se for o caso — desligue
+> `titleScreen.hideModelWithShaders` na configuração. Detalhe técnico completo em
+> [Shader pack quebra o modelo da tela inicial](#shader-pack-quebra-o-modelo-da-tela-inicial).
 
 ## Alvo
 

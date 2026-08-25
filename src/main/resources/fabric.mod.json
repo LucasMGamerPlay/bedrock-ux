@@ -9,6 +9,11 @@
 	],
 	"license": "MIT",
 	"icon": "assets/bedrockux/icon.png",
+	"contact": {
+		"homepage": "https://github.com/LucasMGamerPlay/bedrock-ux",
+		"sources": "https://github.com/LucasMGamerPlay/bedrock-ux",
+		"issues": "https://github.com/LucasMGamerPlay/bedrock-ux/issues"
+	},
 	"environment": "client",
 	"entrypoints": {
 		"client": [
@@ -26,5 +31,13 @@
 		"minecraft": "~26.2",
 		"java": ">=25",
 		"fabric-api": "*"
+	},
+	"breaks": {},
+	"custom": {
+		"modmenu": {
+			"badges": [
+				"client"
+			]
+		}
 	}
 }
