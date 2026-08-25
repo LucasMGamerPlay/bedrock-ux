@@ -239,6 +239,8 @@ public final class BedrockUXConfig {
 		 * o comportamento cru.
 		 */
 		public boolean hideModelWithShaders = true;
+		/** Piscada no rosto 2D, que aparece quando o modelo 3D da lugar a ele. */
+		public boolean blink = true;
 		/** Altura do modelo como fracao da tela. Fixo em pixels estoura em GUI scale alto. */
 		public float modelHeightFraction = 0.55F;
 		/** Teto absoluto de altura, para nao virar um gigante em telas muito altas. */

@@ -93,6 +93,23 @@ public abstract class TitleScreenMixin extends Screen {
 	@Unique
 	private static final int SKIN_TEXTURE_SIZE = 64;
 
+	/** Linhas dos olhos dentro do rosto (o rosto comeca em v=8; olhos em v=12 e 13). */
+	@Unique
+	private static final int EYE_ROW = 4;
+
+	@Unique
+	private static final int EYE_ROWS = 2;
+
+	/** Faixa de pele logo acima dos olhos, usada como "palpebra". */
+	@Unique
+	private static final int LID_SOURCE_V = 10;
+
+	@Unique
+	private static final long BLINK_PERIOD_MILLIS = 4000L;
+
+	@Unique
+	private static final long BLINK_DURATION_MILLIS = 130L;
+
 	@Unique
 	private PlayerSkinWidget bedrockux$playerModel;
 
@@ -468,7 +485,40 @@ public abstract class TitleScreenMixin extends Screen {
 
 		context.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, FACE_U, FACE_V, size, size,
 				FACE_SIZE, FACE_SIZE, SKIN_TEXTURE_SIZE, SKIN_TEXTURE_SIZE);
+
+		if (BedrockUX.config().titleScreen.blink) {
+			bedrockux$drawEyelid(context, texture, x, y, size);
+		}
+
+		// A camada de chapeu vem por ultimo: se a skin tiver cabelo cobrindo os olhos, ele
+		// continua por cima da palpebra, como deve ser.
 		context.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, HAT_U, FACE_V, size, size,
 				FACE_SIZE, FACE_SIZE, SKIN_TEXTURE_SIZE, SKIN_TEXTURE_SIZE);
+	}
+
+	/**
+	 * Fecha os olhos copiando uma faixa de pele da propria skin por cima deles.
+	 *
+	 * <p>Nao ha arte embutida de proposito: a "palpebra" e a testa do jogador reaproveitada,
+	 * entao ela fecha com qualquer tom de pele. Packs como o Just Expressions resolvem isso
+	 * distribuindo variantes da skin com os olhos fechados, o que so funciona com as skins
+	 * que eles conhecem.
+	 */
+	@Unique
+	private static void bedrockux$drawEyelid(GuiGraphicsExtractor context, Identifier texture,
+			int x, int y, int size) {
+		if (System.currentTimeMillis() % BLINK_PERIOD_MILLIS >= BLINK_DURATION_MILLIS) {
+			return;
+		}
+
+		int pixel = size / FACE_SIZE;
+
+		if (pixel <= 0) {
+			return;
+		}
+
+		context.blit(RenderPipelines.GUI_TEXTURED, texture, x, y + EYE_ROW * pixel,
+				FACE_U, LID_SOURCE_V, size, EYE_ROWS * pixel,
+				FACE_SIZE, EYE_ROWS, SKIN_TEXTURE_SIZE, SKIN_TEXTURE_SIZE);
 	}
 }

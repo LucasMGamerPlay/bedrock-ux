@@ -169,6 +169,7 @@ Arquivo gerado em `config/bedrockux.json` na primeira execução:
     "showPlayerName": true,
     "modelFollowsMouse": true,
     "hideModelWithShaders": true,
+    "blink": true,
     "bodyFollowFactor": 0.35,
     "modelHeightFraction": 0.55,
     "maxModelHeight": 170,
@@ -604,3 +605,17 @@ Mover o cursor por script e capturar não funciona se a janela não estiver foca
 processa movimento do mouse com foco, e focar **depois** de mover perde o evento. Duas
 rodadas de capturas saíram idênticas por causa disso, dando a impressão de que o giro não
 respondia. Focar uma vez, antes de tudo, e só então mover e capturar resolve.
+
+## Piscada — e por que ela só existe no rosto 2D
+
+A piscada fecha os olhos **copiando uma faixa de pele da própria skin** por cima deles (a
+testa, logo acima dos olhos). Não há arte embutida: ela fecha com qualquer tom de pele, e a
+camada de chapéu é desenhada por último, então cabelo cobrindo os olhos continua por cima.
+
+**No modelo 3D isso não é possível.** `PlayerSkin` expõe só o `Identifier` da textura — não
+os pixels, nem a URL. Sem ler a skin não dá para gerar a variante de olhos fechados, que é
+exatamente como o Just Expressions faz (e por isso ele só funciona com as skins que o pack
+conhece). Sobrepor em espaço de tela também não serve: a cabeça gira seguindo o cursor e
+acompanha o corpo, então a pálpebra sairia do lugar.
+
+No rosto 2D o mod controla o `blit`, então o recorte é exato.
