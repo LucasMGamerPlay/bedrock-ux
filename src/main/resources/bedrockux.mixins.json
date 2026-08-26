@@ -14,7 +14,7 @@
 		"PauseScreenMixin",
 		"PlayerSkinWidgetAccessor",
 		"ScreenTransitionMixin",
-		"SlotAccessor",
+		"SlotMixin",
 		"TitleScreenMixin"
 	],
 	"injectors": {

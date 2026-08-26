@@ -1,6 +1,7 @@
 package com.bedrockux.mixin;
 
 import com.bedrockux.BedrockUX;
+import com.bedrockux.ext.SpacedSlot;
 import com.bedrockux.ui.BedrockTheme;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -62,11 +63,12 @@ public abstract class InventoryScreenMixin {
 	/** Passo entre slots no vanilla. O Bedrock deixa folga entre eles. */
 	private static final int VANILLA_PITCH = 18;
 
-	@Unique
-	private float bedrockux$spacingFactor = 1.0F;
+	private static final int VANILLA_PANEL_WIDTH = 176;
+
+	private static final int VANILLA_PANEL_HEIGHT = 166;
 
 	@Unique
-	private boolean bedrockux$slotsSpaced;
+	private float bedrockux$spacingFactor = 1.0F;
 
 	/**
 	 * Espaca a grade antes de a tela calcular a propria posicao.
@@ -75,17 +77,16 @@ public abstract class InventoryScreenMixin {
 	 * derivados de {@code imageWidth} e {@code imageHeight}, entao crescer o painel depois
 	 * deixaria tudo fora de centro.
 	 *
-	 * <p>Os slots pertencem ao menu, que sobrevive a um redimensionamento — por isso a
-	 * marcacao, para o espacamento nao ser aplicado em cima de si mesmo e a grade nao sair
-	 * crescendo a cada resize.
+	 * <p>O reposicionamento e idempotente (ver {@link SlotMixin}), o que e obrigatorio aqui:
+	 * o menu do inventario vive no jogador e e reusado a cada abertura da tela, entao aplicar
+	 * o fator sobre a posicao corrente faria a grade crescer a cada abertura ate os slots
+	 * saírem de dentro do painel.
 	 */
 	@Inject(method = "init", at = @At("HEAD"))
 	private void bedrockux$spaceSlots(CallbackInfo callbackInfo) {
-		if (this.bedrockux$slotsSpaced || !BedrockUX.config().inventory.enabled) {
+		if (!BedrockUX.config().inventory.enabled) {
 			return;
 		}
-
-		this.bedrockux$slotsSpaced = true;
 
 		int pitch = BedrockUX.config().inventory.slotPitch;
 		this.bedrockux$spacingFactor = pitch / (float) VANILLA_PITCH;
@@ -97,14 +98,13 @@ public abstract class InventoryScreenMixin {
 		// Escala uniforme: mantem a estrutura do vanilla — coluna de armadura, modelo,
 		// fabricacao, grade e barra rapida — e so abre folga entre os slots.
 		for (Slot slot : ((AbstractContainerScreen<?>) (Object) this).getMenu().slots) {
-			SlotAccessor accessor = (SlotAccessor) slot;
-			accessor.bedrockux$setX(Math.round(slot.x * this.bedrockux$spacingFactor));
-			accessor.bedrockux$setY(Math.round(slot.y * this.bedrockux$spacingFactor));
+			((SpacedSlot) slot).bedrockux$applySpacing(this.bedrockux$spacingFactor);
 		}
 
+		// A tela e construida do zero a cada abertura, entao aqui a base ja e a do vanilla.
 		ContainerScreenAccessor screen = (ContainerScreenAccessor) this;
-		screen.bedrockux$setImageWidth(Math.round(screen.bedrockux$getImageWidth() * this.bedrockux$spacingFactor));
-		screen.bedrockux$setImageHeight(Math.round(screen.bedrockux$getImageHeight() * this.bedrockux$spacingFactor));
+		screen.bedrockux$setImageWidth(Math.round(VANILLA_PANEL_WIDTH * this.bedrockux$spacingFactor));
+		screen.bedrockux$setImageHeight(Math.round(VANILLA_PANEL_HEIGHT * this.bedrockux$spacingFactor));
 	}
 
 	@Redirect(
