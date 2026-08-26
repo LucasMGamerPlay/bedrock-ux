@@ -3,6 +3,17 @@
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Este projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [0.1.1] — 2026-08-25
+
+### Corrigido
+
+- **A grade do inventário crescia a cada abertura.** O menu do inventário vive no jogador e
+  é reusado toda vez que a tela abre, mas a tela é construída do zero. O espaçamento
+  multiplicava a posição corrente do slot pelo fator a cada abertura, então a grade ia
+  compondo enquanto o painel voltava ao tamanho do vanilla — depois de algumas aberturas os
+  slots apareciam fora do painel. A posição de fábrica agora é guardada e o espaçamento
+  sempre deriva dela.
+
 ## [0.1.0] — 2026-08-24
 
 Primeira versão pública. Mod **client-side**: não precisa estar no servidor, e
@@ -52,4 +63,5 @@ funciona em qualquer servidor sem alteração.
 - **Névoa** (parte do UI-08) — ajuste opcional, ainda não validado com Sodium.
 - **Inventário criativo** — só o de sobrevivência foi trabalhado.
 
+[0.1.1]: https://github.com/LucasMGamerPlay/bedrock-ux/releases/tag/v0.1.1
 [0.1.0]: https://github.com/LucasMGamerPlay/bedrock-ux/releases/tag/v0.1.0
